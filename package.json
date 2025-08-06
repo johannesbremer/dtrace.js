@@ -1,22 +1,26 @@
 {
-  "name": "@napi-rs/package-template-pnpm",
-  "version": "1.1.1",
-  "description": "Template project for writing node package with napi-rs",
+  "name": "dtrace-provider",
+  "version": "0.1.0",
+  "description": "Node.js DTrace provider for adding DTrace USDT probes",
   "main": "index.js",
   "types": "index.d.ts",
   "browser": "browser.js",
   "repository": {
-    "url": "git+ssh://git@github.com/napi-rs/package-template-pnpm.git",
+    "url": "git+ssh://git@github.com/johannesbremer/dtrace.js.git",
     "type": "git"
   },
   "license": "MIT",
   "keywords": [
+    "dtrace",
+    "usdt",
+    "tracing",
+    "observability",
+    "probes",
     "napi-rs",
     "NAPI",
     "N-API",
     "Rust",
-    "node-addon",
-    "node-addon-api"
+    "node-addon"
   ],
   "files": [
     "index.d.ts",
@@ -24,7 +28,7 @@
     "browser.js"
   ],
   "napi": {
-    "binaryName": "package-template",
+    "binaryName": "dtrace-provider",
     "targets": [
       "x86_64-apple-darwin",
       "aarch64-apple-darwin",
