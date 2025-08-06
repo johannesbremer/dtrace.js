@@ -1,12 +1,10 @@
 #![deny(clippy::all)]
 
 use napi_derive::napi;
-use napi::{Result, Env};
+use napi::{Result};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-
-// For now, let's start with a simpler implementation without usdt until we get the basic structure working
-// We'll add the actual DTrace functionality later
+// use usdt::{register_probes, dtrace_provider};
 
 // Define the DTrace provider struct
 #[napi]
@@ -50,7 +48,10 @@ impl DTraceProvider {
             *enabled = true;
         }
         
-        // For now, just mark as enabled - we'll add actual DTrace registration later
+        // For now, just mark as enabled
+        // TODO: Add actual DTrace registration when USDT integration is ready
+        println!("DTrace provider '{}' enabled", self.name);
+        
         Ok(())
     }
 
@@ -59,6 +60,7 @@ impl DTraceProvider {
         if let Ok(mut enabled) = self.enabled.lock() {
             *enabled = false;
         }
+        println!("DTrace provider '{}' disabled", self.name);
         Ok(())
     }
 
@@ -70,8 +72,10 @@ impl DTraceProvider {
             return Ok(());
         }
 
-        // For now, just succeed silently - we'll add actual probe firing later
-        println!("Firing probe: {} in provider: {}", probe_name, self.name);
+        // Log probe firing for debugging
+        println!("Firing DTrace probe: {}:{}", self.name, probe_name);
+        
+        // TODO: Add actual DTrace probe firing when USDT integration is ready
         
         Ok(())
     }
@@ -81,8 +85,10 @@ impl DTraceProvider {
 impl DTraceProbe {
     #[napi]
     pub fn fire(&self) -> Result<()> {
-        // For now, just succeed silently - we'll add actual probe firing later
-        println!("Firing probe: {} in provider: {}", self.name, self.provider_name);
+        // Log probe firing for debugging
+        println!("Firing DTrace probe: {}:{}", self.provider_name, self.name);
+        
+        // TODO: Add actual DTrace probe firing when USDT integration is ready
         
         Ok(())
     }
