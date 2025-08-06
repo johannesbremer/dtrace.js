@@ -1,7 +1,7 @@
 #![deny(clippy::all)]
 
 use napi_derive::napi;
-use napi::{Result};
+use napi::Result;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 // use usdt::{register_probes, dtrace_provider};
@@ -72,8 +72,25 @@ impl DTraceProvider {
             return Ok(());
         }
 
-        // Log probe firing for debugging
-        println!("Firing DTrace probe: {}:{}", self.name, probe_name);
+        // Get the probe to access its types
+        let probe_types = if let Ok(probes) = self.probes.lock() {
+            probes.get(&probe_name).map(|p| p.types.clone())
+        } else {
+            None
+        };
+
+        // Log probe firing with module information for debugging
+        let provider_id = if let Some(ref module) = self.module {
+            format!("{}:{}", module, self.name)
+        } else {
+            self.name.clone()
+        };
+        
+        println!("Firing DTrace probe: {}:{}", provider_id, probe_name);
+        
+        if let Some(types) = probe_types {
+            println!("Probe argument types: {:?}", types);
+        }
         
         // TODO: Add actual DTrace probe firing when USDT integration is ready
         
@@ -85,8 +102,8 @@ impl DTraceProvider {
 impl DTraceProbe {
     #[napi]
     pub fn fire(&self) -> Result<()> {
-        // Log probe firing for debugging
         println!("Firing DTrace probe: {}:{}", self.provider_name, self.name);
+        println!("Probe argument types: {:?}", self.types);
         
         // TODO: Add actual DTrace probe firing when USDT integration is ready
         

@@ -45,6 +45,10 @@ var probeChar = provider32.addProbe(
 
 console.log('✓ Created 32-argument char* probe');
 
+// Test the char probe
+probeChar.fire();
+console.log('✓ Fired 32-argument char* probe');
+
 // Test Case 4: Multiple providers with modules (from disambiguation.test.js)
 console.log('\nTest 4: Multiple providers with modules');
 var dtp = d.createDtraceProvider('test');
