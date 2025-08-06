@@ -99,10 +99,12 @@
   },
   "ava": {
     "files": [
-      "tests/**/*"
+      "tests/**/*",
+      "oldtests/**/*"
     ],
     "extensions": {
-      "ts": "module"
+      "ts": "module",
+      "js": true
     },
     "timeout": "2m",
     "workerThreads": false,
