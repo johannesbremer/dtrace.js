@@ -4,22 +4,51 @@ https://github.com/chrisa/node-dtrace-provider/tree/e9d860eaf553b489bd897e15bd01
 */
 // see 32probe.test.js
 
-var d = require('../dtrace-provider');
+var d = require('../dtrace-provider')
 
-var provider = d.createDTraceProvider("testlibusdt");
+var provider = d.createDTraceProvider('testlibusdt')
 var probe = provider.addProbe(
-    "32probe",
-    "int", "int", "int", "int", "int", "int", "int", "int",
-    "int", "int", "int", "int", "int", "int", "int", "int",
-    "int", "int", "int", "int", "int", "int", "int", "int",
-    "int", "int", "int", "int", "int", "int", "int", "int");
+  '32probe',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+  'int',
+)
 
-provider.enable();
+provider.enable()
 
-var args = [];
+var args = []
 for (var n = 1; n <= 32; n++) {
-    args.push(n);
-    probe.fire(function(p) {
-        return args;
-    });
+  args.push(n)
+  probe.fire(function (p) {
+    return args
+  })
 }

@@ -4,13 +4,13 @@ https://github.com/chrisa/node-dtrace-provider/tree/e9d860eaf553b489bd897e15bd01
 */
 // node --expose_gc ...
 
-var d = require('../dtrace-provider');
+var d = require('../dtrace-provider')
 
 for (var i = 0; i < 1000000; i++) {
-    console.log("i: " + i);
-    var dtp = d.createDTraceProvider("testlibusdt" + i);
-    var p = dtp.addProbe("gcprobe");
-    dtp.enable();
-    dtp.disable();
+  console.log('i: ' + i)
+  var dtp = d.createDTraceProvider('testlibusdt' + i)
+  var p = dtp.addProbe('gcprobe')
+  dtp.enable()
+  dtp.disable()
 }
-gc();
+gc()

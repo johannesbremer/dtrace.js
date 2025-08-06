@@ -4,28 +4,28 @@ https://github.com/chrisa/node-dtrace-provider/tree/e9d860eaf553b489bd897e15bd01
 */
 // node --expose_gc ...
 
-var d = require('../dtrace-provider');
-var dtp = d.createDTraceProvider("testlibusdt");
+var d = require('../dtrace-provider')
+var dtp = d.createDTraceProvider('testlibusdt')
 
 // don't assign the returned probe object anywhere
-var p = dtp.addProbe("gcprobe");
-dtp.enable();
+var p = dtp.addProbe('gcprobe')
+dtp.enable()
 
 // run GC
-gc();
+gc()
 
 // probe object should still be around
-dtp.fire("gcprobe", function() {
-    return [];
-});
+dtp.fire('gcprobe', function () {
+  return []
+})
 
-dtp = "something else";
-gc();
+dtp = 'something else'
+gc()
 
-p.fire(function() {
-    return [];
-});
+p.fire(function () {
+  return []
+})
 
-p = "something else";
+p = 'something else'
 
-gc();
+gc()
