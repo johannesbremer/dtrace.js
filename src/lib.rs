@@ -2,7 +2,6 @@
 
 use napi::Result;
 use napi_derive::napi;
-use serde_json;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
@@ -56,7 +55,7 @@ impl DTraceProvider {
 
     // Register the DTrace probes when enabling
     register_probes()
-      .map_err(|e| napi::Error::from_reason(format!("Failed to register DTrace probes: {}", e)))?;
+      .map_err(|e| napi::Error::from_reason(format!("Failed to register DTrace probes: {e}")))?;
 
     // Fire provider enabled probe
     dtrace_provider::provider_enabled!(|| (&self.name));
@@ -115,7 +114,7 @@ impl DTraceProvider {
     let json_str = probe_data.to_string();
     dtrace_provider::generic_probe!(|| (&json_str));
 
-    println!("Firing DTrace probe: {}:{}", provider_id, probe_name);
+    println!("Firing DTrace probe: {provider_id}:{probe_name}");
 
     if let Some(ref probe) = probe_info {
       println!("Probe argument types: {:?}", probe.types);
@@ -161,10 +160,7 @@ impl DTraceProvider {
     let json_str = probe_data.to_string();
     dtrace_provider::generic_probe!(|| (&json_str));
 
-    println!(
-      "Firing DTrace probe: {}:{} with args: {:?}",
-      provider_id, probe_name, args
-    );
+    println!("Firing DTrace probe: {provider_id}:{probe_name} with args: {args:?}");
 
     if let Some(ref probe) = probe_info {
       println!("Probe argument types: {:?}", probe.types);

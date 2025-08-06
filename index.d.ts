@@ -2,7 +2,7 @@
 /* eslint-disable */
 export declare class DTraceProbe {
   fire(): void
-  fire_with_args(args: Array<string>): void
+  fireWithArgs(args: Array<string>): void
 }
 
 export declare class DTraceProvider {
@@ -10,7 +10,7 @@ export declare class DTraceProvider {
   enable(): void
   disable(): void
   fire(probeName: string): void
-  fire_with_args(probeName: string, args: Array<string>): void
+  fireWithArgs(probeName: string, args: Array<string>): void
 }
 
 export declare function createDtraceProvider(name: string, module?: string | undefined | null): DTraceProvider
