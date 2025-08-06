@@ -59,3 +59,4 @@ export default __napiModule.exports
 export const DTraceProbe = __napiModule.exports.DTraceProbe
 export const DTraceProvider = __napiModule.exports.DTraceProvider
 export const createDtraceProvider = __napiModule.exports.createDtraceProvider
+export const createDTraceProvider = __napiModule.exports.createDTraceProvider

@@ -1,10 +1,11 @@
+require('ts-node/register')
 /*
 This file is forked from the following 2-Clause BSD licensed repo:
 https://github.com/chrisa/node-dtrace-provider/tree/e9d860eaf553b489bd897e15bd0153f38b8e73a8
 */
 // see 32probe.test.js
 
-var d = require('../dtrace-provider')
+var d = require('../dtrace-provider.ts')
 
 var provider = d.createDTraceProvider('testlibusdt')
 var probe = provider.addProbe(

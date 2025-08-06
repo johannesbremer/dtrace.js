@@ -1,3 +1,4 @@
+require('ts-node/register')
 /*
 This file is forked from the following 2-Clause BSD licensed repo:
 https://github.com/chrisa/node-dtrace-provider/tree/e9d860eaf553b489bd897e15bd0153f38b8e73a8
@@ -10,7 +11,7 @@ https://github.com/chrisa/node-dtrace-provider/tree/e9d860eaf553b489bd897e15bd01
 // CPU     ID                    FUNCTION:NAME
 //   1   1778                  gcprobe:gcprobe        4320227343
 
-var d = require('../dtrace-provider')
+var d = require('../dtrace-provider.ts')
 var dtp = d.createDTraceProvider('nodeapp')
 
 // don't assign the returned probe object anywhere

@@ -1,3 +1,4 @@
+require('ts-node/register')
 /*
 This file is forked from the following 2-Clause BSD licensed repo:
 https://github.com/chrisa/node-dtrace-provider/tree/e9d860eaf553b489bd897e15bd0153f38b8e73a8
@@ -8,7 +9,7 @@ exports.dtraceTest = function (setup, dtargv, test) {
   return function (t) {
     setup()
 
-    var dtrace = spawn('/usr/sbin/dtrace', dtargv.slice(1))
+    var dtrace = spawn('sudo', ['/usr/sbin/dtrace'].concat(dtargv.slice(1)))
 
     var traces = []
     var exit_code
