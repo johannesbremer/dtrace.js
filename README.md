@@ -1,85 +1,154 @@
-# `@napi-rs/package-template`
+# DTrace Provider for Node.js
 
-![https://github.com/napi-rs/package-template/actions](https://github.com/napi-rs/package-template/workflows/CI/badge.svg)
+A Node.js module that provides DTrace USDT (User-Level Statically Defined Tracing) probe support, built with Rust and NAPI-RS.
 
-> Template project for writing node packages with napi-rs.
+## Installation
 
-# Usage
-
-1. Click **Use this template**.
-2. **Clone** your project.
-3. Run `pnpm install` to install dependencies.
-4. Run `npx napi rename -n [name]` command under the project folder to rename your package.
-
-## Install this test package
-
-```
-pnpm add @napi-rs/package-template
+```bash
+npm install dtrace-provider
 ```
 
 ## Usage
 
-### Build
+### Basic Example
 
-After `pnpm build` command, you can see `package-template.[darwin|win32|linux].node` file in project root. This is the native addon built from [lib.rs](./src/lib.rs).
+```javascript
+const d = require('dtrace-provider');
 
-### Test
+// Create a DTrace provider
+const provider = d.createDtraceProvider("myapp");
 
-With [ava](https://github.com/avajs/ava), run `pnpm test` to testing native addon. You can also switch to another testing framework if you want.
+// Add a probe with argument types
+const probe = provider.addProbe("request", ["int", "char *"]);
 
-### CI
+// Enable the provider
+provider.enable();
 
-With GitHub Actions, each commit and pull request will be built and tested automatically in [`node@18`, `node@20`] x [`macOS`, `Linux`, `Windows`] matrix. You will never be afraid of the native addon broken in these platforms.
+// Fire probes
+provider.fire("request");  // Fire via provider
+probe.fire();              // Fire via probe object
 
-### Release
-
-Release native package is very difficult in old days. Native packages may ask developers who use it to install `build toolchain` like `gcc/llvm`, `node-gyp` or something more.
-
-With `GitHub actions`, we can easily prebuild a `binary` for major platforms. And with `N-API`, we should never be afraid of **ABI Compatible**.
-
-The other problem is how to deliver prebuild `binary` to users. Downloading it in `postinstall` script is a common way that most packages do it right now. The problem with this solution is it introduced many other packages to download binary that has not been used by `runtime codes`. The other problem is some users may not easily download the binary from `GitHub/CDN` if they are behind a private network (But in most cases, they have a private NPM mirror).
-
-In this package, we choose a better way to solve this problem. We release different `npm packages` for different platforms. And add it to `optionalDependencies` before releasing the `Major` package to npm.
-
-`NPM` will choose which native package should download from `registry` automatically. You can see [npm](./npm) dir for details. And you can also run `pnpm add @napi-rs/package-template` to see how it works.
-
-## Develop requirements
-
-- Install the latest `Rust`
-- Install `Node.js@16+` which fully supported `Node-API`
-- Run `corepack enable`
-
-## Test in local
-
-- pnpm
-- pnpm build
-- pnpm test
-
-And you will see:
-
-```bash
-$ ava --verbose
-
-  ✔ sync function from native code
-  ✔ sleep function from native code (201ms)
-  ─
-
-  2 tests passed
-✨  Done in 1.12s.
+// Disable when done
+provider.disable();
 ```
 
-## Release package
+### Advanced Example
 
-Ensure you have set your **NPM_TOKEN** in the `GitHub` project setting.
+```javascript
+const d = require('dtrace-provider');
 
-In `Settings -> Secrets`, add **NPM_TOKEN** into it.
+// Create provider with module name for disambiguation
+const provider = d.createDtraceProvider("myapp", "module1");
 
-When you want to release the package:
+// Add probes with different argument types
+const basicProbe = provider.addProbe("basic", ["int", "char *"]);
+const complexProbe = provider.addProbe("complex", [
+  "int", "int", "int", "char *", "char *"
+]);
 
+provider.enable();
+
+// Fire probes
+provider.fire("basic");
+basicProbe.fire();
+provider.fire("complex");
+complexProbe.fire();
 ```
-npm version [<newversion> | major | minor | patch | premajor | preminor | prepatch | prerelease [--preid=<prerelease-id>] | from-git]
 
-git push
-```
+## API Reference
 
-GitHub actions will do the rest job for you.
+### `createDtraceProvider(name, [module])`
+
+Creates a new DTrace provider.
+
+- `name` (string): The provider name
+- `module` (string, optional): Module name for disambiguation
+
+Returns a `DTraceProvider` instance.
+
+### DTraceProvider
+
+#### `addProbe(name, types)`
+
+Adds a probe to the provider.
+
+- `name` (string): The probe name
+- `types` (array): Array of argument type strings (e.g., `["int", "char *", "json"]`)
+
+Returns a `DTraceProbe` instance.
+
+#### `enable()`
+
+Enables the provider, allowing probes to fire.
+
+#### `disable()`
+
+Disables the provider, causing probe firing to be ignored.
+
+#### `fire(probeName)`
+
+Fires a probe by name.
+
+- `probeName` (string): The name of the probe to fire
+
+### DTraceProbe
+
+#### `fire()`
+
+Fires the probe.
+
+## Supported Argument Types
+
+- `int` - Integer values
+- `char *` - String values  
+- `json` - JSON objects (framework ready)
+
+## Platform Support
+
+This module is designed to work on platforms that support DTrace:
+
+- macOS
+- Solaris/illumos
+- FreeBSD
+- Linux (with DTrace support)
+
+On platforms without DTrace support, the module will function normally but probes will not be visible to DTrace tools.
+
+## Development Status
+
+✅ **Core API Complete**
+- Provider creation and management
+- Probe definition and firing
+- Enable/disable lifecycle
+- Multiple provider support
+- Type system framework
+
+🚧 **In Development**
+- Callback function support for dynamic arguments
+- Actual USDT probe integration
+- DTrace command compatibility testing
+
+## Examples
+
+See the test files for comprehensive examples:
+
+- `basic_fire.js` - Basic probe firing
+- `compatibility-test.js` - Comprehensive API test
+- `final-test.js` - Full test suite compatibility
+
+## License
+
+MIT
+
+## Contributing
+
+This project is built with NAPI-RS and Rust. To contribute:
+
+1. Install Rust and Node.js
+2. Run `pnpm install`
+3. Run `pnpm build` to compile
+4. Run `pnpm test` to test
+
+## Compatibility
+
+This implementation is designed to be compatible with the original `node-dtrace-provider` test suite and API.
