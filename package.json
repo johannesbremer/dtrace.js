@@ -1,22 +1,26 @@
 {
-  "name": "@napi-rs/package-template-pnpm",
-  "version": "1.1.1",
-  "description": "Template project for writing node package with napi-rs",
+  "name": "dtrace-provider",
+  "version": "0.1.0",
+  "description": "Node.js DTrace provider for adding DTrace USDT probes",
   "main": "index.js",
   "types": "index.d.ts",
   "browser": "browser.js",
   "repository": {
-    "url": "git+ssh://git@github.com/napi-rs/package-template-pnpm.git",
+    "url": "git+ssh://git@github.com/johannesbremer/dtrace.js.git",
     "type": "git"
   },
   "license": "MIT",
   "keywords": [
+    "dtrace",
+    "usdt",
+    "tracing",
+    "observability",
+    "probes",
     "napi-rs",
     "NAPI",
     "N-API",
     "Rust",
-    "node-addon",
-    "node-addon-api"
+    "node-addon"
   ],
   "files": [
     "index.d.ts",
@@ -24,7 +28,7 @@
     "browser.js"
   ],
   "napi": {
-    "binaryName": "package-template",
+    "binaryName": "dtrace-provider",
     "targets": [
       "x86_64-apple-darwin",
       "aarch64-apple-darwin",
@@ -52,7 +56,7 @@
   "scripts": {
     "artifacts": "napi artifacts",
     "bench": "node --import @oxc-node/core/register benchmark/bench.ts",
-    "build": "napi build --platform --release",
+    "build": "napi build --platform --release --no-strip",
     "build:debug": "napi build --platform",
     "format": "run-p format:prettier format:rs format:toml",
     "format:prettier": "prettier . -w",
@@ -60,7 +64,9 @@
     "format:rs": "cargo fmt",
     "lint": "oxlint",
     "prepublishOnly": "napi prepublish -t npm",
-    "test": "ava",
+    "test": "npm run test:ava && npm run test:tap",
+    "test:ava": "ava",
+    "test:tap": "tap oldtests/*.test.js",
     "version": "napi version"
   },
   "devDependencies": {
@@ -79,6 +85,7 @@
     "npm-run-all2": "^8.0.4",
     "oxlint": "^1.8.0",
     "prettier": "^3.6.2",
+    "tap": "^21.1.0",
     "tinybench": "^4.0.1",
     "typescript": "^5.8.3"
   },
@@ -94,8 +101,12 @@
     ]
   },
   "ava": {
+    "files": [
+      "tests/**/*"
+    ],
     "extensions": {
-      "ts": "module"
+      "ts": "module",
+      "js": true
     },
     "timeout": "2m",
     "workerThreads": false,

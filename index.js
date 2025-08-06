@@ -73,23 +73,23 @@ function requireNative() {
   } else if (process.platform === 'android') {
     if (process.arch === 'arm64') {
       try {
-        return require('./package-template.android-arm64.node')
+        return require('./dtrace-provider.android-arm64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-pnpm-android-arm64')
+        return require('dtrace-provider-android-arm64')
       } catch (e) {
         loadErrors.push(e)
       }
     } else if (process.arch === 'arm') {
       try {
-        return require('./package-template.android-arm-eabi.node')
+        return require('./dtrace-provider.android-arm-eabi.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-pnpm-android-arm-eabi')
+        return require('dtrace-provider-android-arm-eabi')
       } catch (e) {
         loadErrors.push(e)
       }
@@ -99,34 +99,34 @@ function requireNative() {
   } else if (process.platform === 'win32') {
     if (process.arch === 'x64') {
       try {
-        return require('./package-template.win32-x64-msvc.node')
+        return require('./dtrace-provider.win32-x64-msvc.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-pnpm-win32-x64-msvc')
+        return require('dtrace-provider-win32-x64-msvc')
       } catch (e) {
         loadErrors.push(e)
       }
     } else if (process.arch === 'ia32') {
       try {
-        return require('./package-template.win32-ia32-msvc.node')
+        return require('./dtrace-provider.win32-ia32-msvc.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-pnpm-win32-ia32-msvc')
+        return require('dtrace-provider-win32-ia32-msvc')
       } catch (e) {
         loadErrors.push(e)
       }
     } else if (process.arch === 'arm64') {
       try {
-        return require('./package-template.win32-arm64-msvc.node')
+        return require('./dtrace-provider.win32-arm64-msvc.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-pnpm-win32-arm64-msvc')
+        return require('dtrace-provider-win32-arm64-msvc')
       } catch (e) {
         loadErrors.push(e)
       }
@@ -135,34 +135,34 @@ function requireNative() {
     }
   } else if (process.platform === 'darwin') {
     try {
-      return require('./package-template.darwin-universal.node')
+      return require('./dtrace-provider.darwin-universal.node')
     } catch (e) {
       loadErrors.push(e)
     }
     try {
-      return require('@napi-rs/package-template-pnpm-darwin-universal')
+      return require('dtrace-provider-darwin-universal')
     } catch (e) {
       loadErrors.push(e)
     }
     if (process.arch === 'x64') {
       try {
-        return require('./package-template.darwin-x64.node')
+        return require('./dtrace-provider.darwin-x64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-pnpm-darwin-x64')
+        return require('dtrace-provider-darwin-x64')
       } catch (e) {
         loadErrors.push(e)
       }
     } else if (process.arch === 'arm64') {
       try {
-        return require('./package-template.darwin-arm64.node')
+        return require('./dtrace-provider.darwin-arm64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-pnpm-darwin-arm64')
+        return require('dtrace-provider-darwin-arm64')
       } catch (e) {
         loadErrors.push(e)
       }
@@ -172,23 +172,23 @@ function requireNative() {
   } else if (process.platform === 'freebsd') {
     if (process.arch === 'x64') {
       try {
-        return require('./package-template.freebsd-x64.node')
+        return require('./dtrace-provider.freebsd-x64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-pnpm-freebsd-x64')
+        return require('dtrace-provider-freebsd-x64')
       } catch (e) {
         loadErrors.push(e)
       }
     } else if (process.arch === 'arm64') {
       try {
-        return require('./package-template.freebsd-arm64.node')
+        return require('./dtrace-provider.freebsd-arm64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-pnpm-freebsd-arm64')
+        return require('dtrace-provider-freebsd-arm64')
       } catch (e) {
         loadErrors.push(e)
       }
@@ -199,23 +199,23 @@ function requireNative() {
     if (process.arch === 'x64') {
       if (isMusl()) {
         try {
-          return require('./package-template.linux-x64-musl.node')
+          return require('./dtrace-provider.linux-x64-musl.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          return require('@napi-rs/package-template-pnpm-linux-x64-musl')
+          return require('dtrace-provider-linux-x64-musl')
         } catch (e) {
           loadErrors.push(e)
         }
       } else {
         try {
-          return require('./package-template.linux-x64-gnu.node')
+          return require('./dtrace-provider.linux-x64-gnu.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          return require('@napi-rs/package-template-pnpm-linux-x64-gnu')
+          return require('dtrace-provider-linux-x64-gnu')
         } catch (e) {
           loadErrors.push(e)
         }
@@ -223,23 +223,23 @@ function requireNative() {
     } else if (process.arch === 'arm64') {
       if (isMusl()) {
         try {
-          return require('./package-template.linux-arm64-musl.node')
+          return require('./dtrace-provider.linux-arm64-musl.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          return require('@napi-rs/package-template-pnpm-linux-arm64-musl')
+          return require('dtrace-provider-linux-arm64-musl')
         } catch (e) {
           loadErrors.push(e)
         }
       } else {
         try {
-          return require('./package-template.linux-arm64-gnu.node')
+          return require('./dtrace-provider.linux-arm64-gnu.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          return require('@napi-rs/package-template-pnpm-linux-arm64-gnu')
+          return require('dtrace-provider-linux-arm64-gnu')
         } catch (e) {
           loadErrors.push(e)
         }
@@ -247,23 +247,23 @@ function requireNative() {
     } else if (process.arch === 'arm') {
       if (isMusl()) {
         try {
-          return require('./package-template.linux-arm-musleabihf.node')
+          return require('./dtrace-provider.linux-arm-musleabihf.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          return require('@napi-rs/package-template-pnpm-linux-arm-musleabihf')
+          return require('dtrace-provider-linux-arm-musleabihf')
         } catch (e) {
           loadErrors.push(e)
         }
       } else {
         try {
-          return require('./package-template.linux-arm-gnueabihf.node')
+          return require('./dtrace-provider.linux-arm-gnueabihf.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          return require('@napi-rs/package-template-pnpm-linux-arm-gnueabihf')
+          return require('dtrace-provider-linux-arm-gnueabihf')
         } catch (e) {
           loadErrors.push(e)
         }
@@ -271,46 +271,46 @@ function requireNative() {
     } else if (process.arch === 'riscv64') {
       if (isMusl()) {
         try {
-          return require('./package-template.linux-riscv64-musl.node')
+          return require('./dtrace-provider.linux-riscv64-musl.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          return require('@napi-rs/package-template-pnpm-linux-riscv64-musl')
+          return require('dtrace-provider-linux-riscv64-musl')
         } catch (e) {
           loadErrors.push(e)
         }
       } else {
         try {
-          return require('./package-template.linux-riscv64-gnu.node')
+          return require('./dtrace-provider.linux-riscv64-gnu.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          return require('@napi-rs/package-template-pnpm-linux-riscv64-gnu')
+          return require('dtrace-provider-linux-riscv64-gnu')
         } catch (e) {
           loadErrors.push(e)
         }
       }
     } else if (process.arch === 'ppc64') {
       try {
-        return require('./package-template.linux-ppc64-gnu.node')
+        return require('./dtrace-provider.linux-ppc64-gnu.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-pnpm-linux-ppc64-gnu')
+        return require('dtrace-provider-linux-ppc64-gnu')
       } catch (e) {
         loadErrors.push(e)
       }
     } else if (process.arch === 's390x') {
       try {
-        return require('./package-template.linux-s390x-gnu.node')
+        return require('./dtrace-provider.linux-s390x-gnu.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-pnpm-linux-s390x-gnu')
+        return require('dtrace-provider-linux-s390x-gnu')
       } catch (e) {
         loadErrors.push(e)
       }
@@ -320,34 +320,34 @@ function requireNative() {
   } else if (process.platform === 'openharmony') {
     if (process.arch === 'arm64') {
       try {
-        return require('./package-template.linux-arm64-ohos.node')
+        return require('./dtrace-provider.linux-arm64-ohos.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-pnpm-linux-arm64-ohos')
+        return require('dtrace-provider-linux-arm64-ohos')
       } catch (e) {
         loadErrors.push(e)
       }
     } else if (process.arch === 'x64') {
       try {
-        return require('./package-template.linux-x64-ohos.node')
+        return require('./dtrace-provider.linux-x64-ohos.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-pnpm-linux-x64-ohos')
+        return require('dtrace-provider-linux-x64-ohos')
       } catch (e) {
         loadErrors.push(e)
       }
     } else if (process.arch === 'arm') {
       try {
-        return require('./package-template.linux-arm-ohos.node')
+        return require('./dtrace-provider.linux-arm-ohos.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@napi-rs/package-template-pnpm-linux-arm-ohos')
+        return require('dtrace-provider-linux-arm-ohos')
       } catch (e) {
         loadErrors.push(e)
       }
@@ -363,7 +363,7 @@ nativeBinding = requireNative()
 
 if (!nativeBinding || process.env.NAPI_RS_FORCE_WASI) {
   try {
-    nativeBinding = require('./package-template.wasi.cjs')
+    nativeBinding = require('./dtrace-provider.wasi.cjs')
   } catch (err) {
     if (process.env.NAPI_RS_FORCE_WASI) {
       loadErrors.push(err)
@@ -371,7 +371,7 @@ if (!nativeBinding || process.env.NAPI_RS_FORCE_WASI) {
   }
   if (!nativeBinding) {
     try {
-      nativeBinding = require('@napi-rs/package-template-pnpm-wasm32-wasi')
+      nativeBinding = require('dtrace-provider-wasm32-wasi')
     } catch (err) {
       if (process.env.NAPI_RS_FORCE_WASI) {
         loadErrors.push(err)
@@ -393,4 +393,78 @@ if (!nativeBinding) {
 }
 
 module.exports = nativeBinding
-module.exports.plus100 = nativeBinding.plus100
+
+// Wrap the DTraceProvider to support the old API
+class DTraceProviderWrapper {
+  constructor(name, module) {
+    this._provider = nativeBinding.createDtraceProvider(name, module)
+    this.name = name
+    this.module = module
+  }
+
+  addProbe(name, ...types) {
+    // Handle both old API (variable args) and new API (array)
+    const typeArray = Array.isArray(types[0]) ? types[0] : types
+    const probe = this._provider.addProbe(name, typeArray)
+    
+    // Wrap the probe to support the old fire API
+    return new DTraceProbeWrapper(probe, this._provider)
+  }
+
+  enable() {
+    return this._provider.enable()
+  }
+
+  disable() {
+    return this._provider.disable()
+  }
+
+  fire(probeName, callback) {
+    if (typeof callback === 'function') {
+      const args = callback(this)
+      if (Array.isArray(args)) {
+        return this._provider.fireWithArgs(probeName, args.map(String))
+      }
+    }
+    return this._provider.fire(probeName)
+  }
+
+  fireWithArgs(probeName, args) {
+    return this._provider.fireWithArgs(probeName, args)
+  }
+}
+
+// Wrap the DTraceProbe to support the old API
+class DTraceProbeWrapper {
+  constructor(probe, provider) {
+    this._probe = probe
+    this._provider = provider
+    this.name = probe.name
+    this.types = probe.types
+    this.providerName = probe.providerName
+  }
+
+  fire(callback) {
+    if (typeof callback === 'function') {
+      const args = callback(this)
+      if (Array.isArray(args)) {
+        return this._probe.fireWithArgs(args.map(String))
+      }
+    }
+    return this._probe.fire()
+  }
+
+  fireWithArgs(args) {
+    return this._probe.fireWithArgs(args)
+  }
+}
+
+// Export the wrapper function that creates the compatible provider
+function createDTraceProvider(name, module) {
+  return new DTraceProviderWrapper(name, module)
+}
+
+module.exports.DTraceProbe = nativeBinding.DTraceProbe
+module.exports.DTraceProvider = nativeBinding.DTraceProvider
+module.exports.createDtraceProvider = nativeBinding.createDtraceProvider
+module.exports.createDTraceProvider = createDTraceProvider

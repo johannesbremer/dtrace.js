@@ -1,1 +1,1 @@
-export * from '@napi-rs/package-template-pnpm-wasm32-wasi'
+export * from 'dtrace-provider-wasm32-wasi'
