@@ -64,7 +64,9 @@
     "format:rs": "cargo fmt",
     "lint": "oxlint",
     "prepublishOnly": "napi prepublish -t npm",
-    "test": "ava",
+    "test": "npm run test:ava && npm run test:tap",
+    "test:ava": "ava",
+    "test:tap": "tap oldtests/*.test.js",
     "version": "napi version"
   },
   "devDependencies": {
@@ -83,6 +85,7 @@
     "npm-run-all2": "^8.0.4",
     "oxlint": "^1.8.0",
     "prettier": "^3.6.2",
+    "tap": "^21.1.0",
     "tinybench": "^4.0.1",
     "typescript": "^5.8.3"
   },
@@ -99,8 +102,7 @@
   },
   "ava": {
     "files": [
-      "tests/**/*",
-      "oldtests/**/*"
+      "tests/**/*"
     ],
     "extensions": {
       "ts": "module",

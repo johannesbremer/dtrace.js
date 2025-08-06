@@ -393,6 +393,78 @@ if (!nativeBinding) {
 }
 
 module.exports = nativeBinding
+
+// Wrap the DTraceProvider to support the old API
+class DTraceProviderWrapper {
+  constructor(name, module) {
+    this._provider = nativeBinding.createDtraceProvider(name, module)
+    this.name = name
+    this.module = module
+  }
+
+  addProbe(name, ...types) {
+    // Handle both old API (variable args) and new API (array)
+    const typeArray = Array.isArray(types[0]) ? types[0] : types
+    const probe = this._provider.addProbe(name, typeArray)
+    
+    // Wrap the probe to support the old fire API
+    return new DTraceProbeWrapper(probe, this._provider)
+  }
+
+  enable() {
+    return this._provider.enable()
+  }
+
+  disable() {
+    return this._provider.disable()
+  }
+
+  fire(probeName, callback) {
+    if (typeof callback === 'function') {
+      const args = callback(this)
+      if (Array.isArray(args)) {
+        return this._provider.fireWithArgs(probeName, args.map(String))
+      }
+    }
+    return this._provider.fire(probeName)
+  }
+
+  fireWithArgs(probeName, args) {
+    return this._provider.fireWithArgs(probeName, args)
+  }
+}
+
+// Wrap the DTraceProbe to support the old API
+class DTraceProbeWrapper {
+  constructor(probe, provider) {
+    this._probe = probe
+    this._provider = provider
+    this.name = probe.name
+    this.types = probe.types
+    this.providerName = probe.providerName
+  }
+
+  fire(callback) {
+    if (typeof callback === 'function') {
+      const args = callback(this)
+      if (Array.isArray(args)) {
+        return this._probe.fireWithArgs(args.map(String))
+      }
+    }
+    return this._probe.fire()
+  }
+
+  fireWithArgs(args) {
+    return this._probe.fireWithArgs(args)
+  }
+}
+
+// Export the wrapper function that creates the compatible provider
+function createDTraceProvider(name, module) {
+  return new DTraceProviderWrapper(name, module)
+}
+
 module.exports.DTraceProbe = nativeBinding.DTraceProbe
 module.exports.DTraceProvider = nativeBinding.DTraceProvider
 module.exports.createDtraceProvider = nativeBinding.createDtraceProvider
+module.exports.createDTraceProvider = createDTraceProvider

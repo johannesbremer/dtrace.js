@@ -6,3 +6,4 @@ target
 /index.js
 index.d.ts
 pnpm-lock.yaml
+.tap/
