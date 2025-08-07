@@ -162,8 +162,6 @@ jobs:
         run: pnpm test
   test-linux-binding:
     name: Test ${{ matrix.target }} - node@${{ matrix.node }}
-    needs:
-      - build
     strategy:
       fail-fast: false
       matrix:
@@ -195,16 +193,11 @@ jobs:
             }
           " >> $GITHUB_OUTPUT
           # Since we only test -gnu targets on Linux now, we always use oraclelinux
-          echo "IMAGE=oraclelinux:8" >> $GITHUB_OUTPUT
+          echo "IMAGE=oraclelinux:9" >> $GITHUB_OUTPUT
           echo "PNPM_STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
       # use --force to download the all platform/arch dependencies
       - name: Install dependencies
         run: pnpm install --force
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: bindings-${{ matrix.target }}
-          path: .
       - name: List packages
         run: ls -R .
         shell: bash
@@ -215,10 +208,17 @@ jobs:
           options: -v ${{ steps.docker.outputs.PNPM_STORE_PATH }}:${{ steps.docker.outputs.PNPM_STORE_PATH }} -v ${{ github.workspace }}:${{ github.workspace }} -w ${{ github.workspace }} --platform ${{ steps.docker.outputs.PLATFORM }}
           run: |
             set -ex
-            yum install -y curl dtrace-utils
+            dnf config-manager --enable ol9_UEKR7
+            dnf install -y curl dtrace gcc
             curl -fsSL https://rpm.nodesource.com/setup_${{ matrix.node }}.x | bash -
-            yum install -y nodejs
-            npm run test
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh  -s -- -y
+            source "$HOME/.cargo/env"
+            dnf install -y nodejs
+            npm install -g pnpm
+            echo "Building the native module..."
+            pnpm install
+            pnpm build
+            pnpm test
   publish:
     name: Publish
     runs-on: ubuntu-latest
