@@ -11,6 +11,32 @@ use usdt::{dtrace_provider, register_probes};
 // Point the macro to the D provider definition file
 dtrace_provider!("probes.d");
 
+// Macro to handle probe name matching and firing
+macro_rules! fire_probe {
+    ($probe_name:expr, $($args:expr),*) => {
+        match $probe_name.as_str() {
+            "p1" => nodeapp::p1!(|| ($($args),*)),
+            "p2" => nodeapp::p2!(|| ($($args),*)),
+            "p3" => nodeapp::p3!(|| ($($args),*)),
+            "p4" => nodeapp::p4!(|| ($($args),*)),
+            "p5" => nodeapp::p5!(|| ($($args),*)),
+            "p6" => nodeapp::p6!(|| ($($args),*)),
+            "p7" => nodeapp::p7!(|| ($($args),*)),
+            "p8" => nodeapp::p8!(|| ($($args),*)),
+            "p9" => nodeapp::p9!(|| ($($args),*)),
+            "p10" => nodeapp::p10!(|| ($($args),*)),
+            "gcprobe" => nodeapp::gcprobe!(|| ($($args),*)),
+            "after1" => nodeapp::after1!(|| ($($args),*)),
+            "json1" => nodeapp::json1!(|| ($($args),*)),
+            "probe0" => nodeapp::probe0!(|| ($($args),*)),
+            "probe1" => nodeapp::probe1!(|| ($($args),*)),
+            "probe2" => nodeapp::probe2!(|| ($($args),*)),
+            "probe3" => nodeapp::probe3!(|| ($($args),*)),
+            _ => nodeapp::generic_probe!(|| ($($args),*)),
+        }
+    };
+}
+
 // Define the DTrace provider struct
 #[napi]
 #[derive(Clone)]
@@ -109,20 +135,8 @@ impl DTraceProvider {
     // Convert to JSON string and fire the actual DTrace probe
     let json_str = probe_data.to_string();
 
-    // Map probe names to specific USDT probes
-    match probe_name.as_str() {
-      "p1" => nodeapp::p1!(|| (42u64, json_str.as_str())),
-      "p2" => nodeapp::p2!(|| (42u64, json_str.as_str())),
-      "p3" => nodeapp::p3!(|| (42u64, json_str.as_str())),
-      "p4" => nodeapp::p4!(|| (42u64, json_str.as_str())),
-      "p5" => nodeapp::p5!(|| (42u64, json_str.as_str())),
-      "p6" => nodeapp::p6!(|| (42u64, json_str.as_str())),
-      "p7" => nodeapp::p7!(|| (42u64, json_str.as_str())),
-      "p8" => nodeapp::p8!(|| (42u64, json_str.as_str())),
-      "p9" => nodeapp::p9!(|| (42u64, json_str.as_str())),
-      "p10" => nodeapp::p10!(|| (42u64, json_str.as_str())),
-      _ => nodeapp::generic_probe!(|| (json_str.as_str())),
-    }
+    // Use macro to fire the appropriate probe
+    fire_probe!(probe_name, 42u64, 0u64, json_str.as_str());
 
     Ok(())
   }
@@ -135,54 +149,16 @@ impl DTraceProvider {
       return Ok(());
     }
 
-    // Get the probe to access its types
-    let probe_info = if let Ok(probes) = self.probes.lock() {
-      probes.get(&probe_name).cloned()
-    } else {
-      None
-    };
-
-    // Create JSON payload with probe information and arguments
-    let provider_id = if let Some(ref module) = self.module {
-      format!("{}:{}", module, self.name)
-    } else {
-      self.name.clone()
-    };
-
-    let probe_data = serde_json::json!({
-        "provider": provider_id,
-        "probe": probe_name,
-        "types": probe_info.as_ref().map(|p| &p.types).unwrap_or(&vec![]),
-        "args": args,
-        "timestamp": std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_millis()
-    });
-
-    // Convert to JSON string and fire the actual DTrace probe
-    let json_str = probe_data.to_string();
-
     // Map probe names to specific USDT probes with actual arguments
     let arg0 = args
       .first()
       .and_then(|s| s.parse::<u64>().ok())
       .unwrap_or(0);
-    let arg1 = args.get(1).map(|s| s.as_str()).unwrap_or("");
+    let arg1 = args.get(1).and_then(|s| s.parse::<u64>().ok()).unwrap_or(0);
+    let arg2 = args.get(2).map(|s| s.as_str()).unwrap_or("undefined");
 
-    match probe_name.as_str() {
-      "p1" => nodeapp::p1!(|| (arg0, arg1)),
-      "p2" => nodeapp::p2!(|| (arg0, arg1)),
-      "p3" => nodeapp::p3!(|| (arg0, arg1)),
-      "p4" => nodeapp::p4!(|| (arg0, arg1)),
-      "p5" => nodeapp::p5!(|| (arg0, arg1)),
-      "p6" => nodeapp::p6!(|| (arg0, arg1)),
-      "p7" => nodeapp::p7!(|| (arg0, arg1)),
-      "p8" => nodeapp::p8!(|| (arg0, arg1)),
-      "p9" => nodeapp::p9!(|| (arg0, arg1)),
-      "p10" => nodeapp::p10!(|| (arg0, arg1)),
-      _ => nodeapp::generic_probe!(|| (json_str.as_str())),
-    }
+    // Use macro to fire the appropriate probe with actual arguments
+    fire_probe!(probe_name, arg0, arg1, arg2);
 
     Ok(())
   }
@@ -206,62 +182,24 @@ impl DTraceProbe {
     // Convert to JSON string and fire the actual DTrace probe
     let json_str = probe_data.to_string();
 
-    // Map probe names to specific USDT probes
-    match self.name.as_str() {
-      "p1" => nodeapp::p1!(|| (42u64, json_str.as_str())),
-      "p2" => nodeapp::p2!(|| (42u64, json_str.as_str())),
-      "p3" => nodeapp::p3!(|| (42u64, json_str.as_str())),
-      "p4" => nodeapp::p4!(|| (42u64, json_str.as_str())),
-      "p5" => nodeapp::p5!(|| (42u64, json_str.as_str())),
-      "p6" => nodeapp::p6!(|| (42u64, json_str.as_str())),
-      "p7" => nodeapp::p7!(|| (42u64, json_str.as_str())),
-      "p8" => nodeapp::p8!(|| (42u64, json_str.as_str())),
-      "p9" => nodeapp::p9!(|| (42u64, json_str.as_str())),
-      "p10" => nodeapp::p10!(|| (42u64, json_str.as_str())),
-      _ => nodeapp::generic_probe!(|| (json_str.as_str())),
-    }
+    // Use macro to fire the appropriate probe
+    fire_probe!(self.name, 42u64, 0u64, json_str.as_str());
 
     Ok(())
   }
 
   #[napi]
   pub fn fire_with_args(&self, args: Vec<String>) -> Result<()> {
-    // Create JSON payload with probe information and arguments
-    let probe_data = serde_json::json!({
-        "provider": self.provider_name,
-        "probe": self.name,
-        "types": self.types,
-        "args": args,
-        "timestamp": std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_millis()
-    });
-
-    // Convert to JSON string and fire the actual DTrace probe
-    let json_str = probe_data.to_string();
-
     // Map probe names to specific USDT probes with actual arguments
     let arg0 = args
       .first()
       .and_then(|s| s.parse::<u64>().ok())
       .unwrap_or(0);
-    let arg1 = args.get(1).map(|s| s.as_str()).unwrap_or("");
+    let arg1 = args.get(1).and_then(|s| s.parse::<u64>().ok()).unwrap_or(0);
+    let arg2 = args.get(2).map(|s| s.as_str()).unwrap_or("undefined");
 
-    // Map probe names to specific USDT probes
-    match self.name.as_str() {
-      "p1" => nodeapp::p1!(|| (arg0, arg1)),
-      "p2" => nodeapp::p2!(|| (arg0, arg1)),
-      "p3" => nodeapp::p3!(|| (arg0, arg1)),
-      "p4" => nodeapp::p4!(|| (arg0, arg1)),
-      "p5" => nodeapp::p5!(|| (arg0, arg1)),
-      "p6" => nodeapp::p6!(|| (arg0, arg1)),
-      "p7" => nodeapp::p7!(|| (arg0, arg1)),
-      "p8" => nodeapp::p8!(|| (arg0, arg1)),
-      "p9" => nodeapp::p9!(|| (arg0, arg1)),
-      "p10" => nodeapp::p10!(|| (arg0, arg1)),
-      _ => nodeapp::generic_probe!(|| (json_str.as_str())),
-    }
+    // Use macro to fire the appropriate probe with actual arguments
+    fire_probe!(self.name, arg0, arg1, arg2);
 
     Ok(())
   }
