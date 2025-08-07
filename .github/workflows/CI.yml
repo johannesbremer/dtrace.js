@@ -129,6 +129,8 @@ jobs:
             -w ${{ github.workspace }}
           run: |
             set -ex
+            dnf install -y dnf-plugins-core
+            dnf config-manager --enable ol9_UEKR7
             dnf install -y curl dtrace gcc
             # Setup Node.js (version 24) and pnpm
             curl -fsSL https://rpm.nodesource.com/setup_24.x | bash -
