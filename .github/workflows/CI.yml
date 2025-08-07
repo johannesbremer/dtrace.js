@@ -214,7 +214,9 @@ jobs:
             }
           " >> $GITHUB_OUTPUT
           node -e "
-            if ('${{ matrix.target }}'.endsWith('-musl')) {
+            if ('${{ matrix.target }}'.includes('gnu')) {
+              console.log('IMAGE=oraclelinux:8')
+            } else if ('${{ matrix.target }}'.endsWith('-musl')) {
               console.log('IMAGE=node:${{ matrix.node }}-alpine')
             } else {
               console.log('IMAGE=node:${{ matrix.node }}-slim')
@@ -237,7 +239,15 @@ jobs:
         with:
           image: ${{ steps.docker.outputs.IMAGE }}
           options: -v ${{ steps.docker.outputs.PNPM_STORE_PATH }}:${{ steps.docker.outputs.PNPM_STORE_PATH }} -v ${{ github.workspace }}:${{ github.workspace }} -w ${{ github.workspace }} --platform ${{ steps.docker.outputs.PLATFORM }}
-          run: npm run test
+          run: |
+            set -ex
+            # If we're in the Oracle Linux container, we need to install our dependencies
+            if [[ "${{ matrix.target }}" == *"-gnu"* ]]; then
+              yum install -y curl dtrace-utils
+              curl -fsSL https://rpm.nodesource.com/setup_${{ matrix.node }}.x | bash -
+              yum install -y nodejs
+            fi
+            npm run test
   publish:
     name: Publish
     runs-on: ubuntu-latest
