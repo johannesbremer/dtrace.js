@@ -14,3 +14,5 @@ export declare class DTraceProvider {
 }
 
 export declare function createDtraceProvider(name: string, module?: string | undefined | null): DTraceProvider
+
+export declare function createDTraceProvider(name: string, module?: string | undefined | null): DTraceProvider

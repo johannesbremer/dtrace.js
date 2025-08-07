@@ -1,3 +1,4 @@
+require('ts-node/register')
 /*
 This file is forked from the following 2-Clause BSD licensed repo:
 https://github.com/chrisa/node-dtrace-provider/tree/e9d860eaf553b489bd897e15bd0153f38b8e73a8
@@ -14,7 +15,7 @@ if (process.platform == 'darwin') {
     'testlibusdt*:::32probe{ printf("%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\\n", copyinstr((uintptr_t)args[0]), copyinstr((uintptr_t)args[1]), copyinstr((uintptr_t)args[2]), copyinstr((uintptr_t)args[3]), copyinstr((uintptr_t)args[4]), copyinstr((uintptr_t)args[5]), copyinstr((uintptr_t)args[6]), copyinstr((uintptr_t)args[7]), copyinstr((uintptr_t)args[8]), copyinstr((uintptr_t)args[9]), copyinstr((uintptr_t)args[10]), copyinstr((uintptr_t)args[11]), copyinstr((uintptr_t)args[12]), copyinstr((uintptr_t)args[13]), copyinstr((uintptr_t)args[14]), copyinstr((uintptr_t)args[15]), copyinstr((uintptr_t)args[16]), copyinstr((uintptr_t)args[17]), copyinstr((uintptr_t)args[18]), copyinstr((uintptr_t)args[19]), copyinstr((uintptr_t)args[20]), copyinstr((uintptr_t)args[21]), copyinstr((uintptr_t)args[22]), copyinstr((uintptr_t)args[23]), copyinstr((uintptr_t)args[24]), copyinstr((uintptr_t)args[25]), copyinstr((uintptr_t)args[26]), copyinstr((uintptr_t)args[27]), copyinstr((uintptr_t)args[28]), copyinstr((uintptr_t)args[29]), copyinstr((uintptr_t)args[30]), copyinstr((uintptr_t)args[31])); }'
 }
 
-var d = require('../dtrace-provider')
+var d = require('../dtrace-provider.ts')
 var provider = d.createDTraceProvider('testlibusdt')
 
 test(

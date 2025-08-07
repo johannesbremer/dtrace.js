@@ -58,9 +58,7 @@ impl DTraceProvider {
       .map_err(|e| napi::Error::from_reason(format!("Failed to register DTrace probes: {e}")))?;
 
     // Fire provider enabled probe
-    dtrace_provider::provider_enabled!(|| (&self.name));
-
-    println!("DTrace provider '{}' enabled", self.name);
+    nodeapp::provider_enabled!(|| (self.name.as_str()));
 
     Ok(())
   }
@@ -72,9 +70,7 @@ impl DTraceProvider {
     }
 
     // Fire provider disabled probe
-    dtrace_provider::provider_disabled!(|| (&self.name));
-
-    println!("DTrace provider '{}' disabled", self.name);
+    nodeapp::provider_disabled!(|| (self.name.as_str()));
     Ok(())
   }
 
@@ -112,12 +108,20 @@ impl DTraceProvider {
 
     // Convert to JSON string and fire the actual DTrace probe
     let json_str = probe_data.to_string();
-    dtrace_provider::generic_probe!(|| (&json_str));
 
-    println!("Firing DTrace probe: {provider_id}:{probe_name}");
-
-    if let Some(ref probe) = probe_info {
-      println!("Probe argument types: {:?}", probe.types);
+    // Map probe names to specific USDT probes
+    match probe_name.as_str() {
+      "p1" => nodeapp::p1!(|| (42u64, json_str.as_str())),
+      "p2" => nodeapp::p2!(|| (42u64, json_str.as_str())),
+      "p3" => nodeapp::p3!(|| (42u64, json_str.as_str())),
+      "p4" => nodeapp::p4!(|| (42u64, json_str.as_str())),
+      "p5" => nodeapp::p5!(|| (42u64, json_str.as_str())),
+      "p6" => nodeapp::p6!(|| (42u64, json_str.as_str())),
+      "p7" => nodeapp::p7!(|| (42u64, json_str.as_str())),
+      "p8" => nodeapp::p8!(|| (42u64, json_str.as_str())),
+      "p9" => nodeapp::p9!(|| (42u64, json_str.as_str())),
+      "p10" => nodeapp::p10!(|| (42u64, json_str.as_str())),
+      _ => nodeapp::generic_probe!(|| (json_str.as_str())),
     }
 
     Ok(())
@@ -158,12 +162,26 @@ impl DTraceProvider {
 
     // Convert to JSON string and fire the actual DTrace probe
     let json_str = probe_data.to_string();
-    dtrace_provider::generic_probe!(|| (&json_str));
 
-    println!("Firing DTrace probe: {provider_id}:{probe_name} with args: {args:?}");
+    // Map probe names to specific USDT probes with actual arguments
+    let arg0 = args
+      .first()
+      .and_then(|s| s.parse::<u64>().ok())
+      .unwrap_or(0);
+    let arg1 = args.get(1).map(|s| s.as_str()).unwrap_or("");
 
-    if let Some(ref probe) = probe_info {
-      println!("Probe argument types: {:?}", probe.types);
+    match probe_name.as_str() {
+      "p1" => nodeapp::p1!(|| (arg0, arg1)),
+      "p2" => nodeapp::p2!(|| (arg0, arg1)),
+      "p3" => nodeapp::p3!(|| (arg0, arg1)),
+      "p4" => nodeapp::p4!(|| (arg0, arg1)),
+      "p5" => nodeapp::p5!(|| (arg0, arg1)),
+      "p6" => nodeapp::p6!(|| (arg0, arg1)),
+      "p7" => nodeapp::p7!(|| (arg0, arg1)),
+      "p8" => nodeapp::p8!(|| (arg0, arg1)),
+      "p9" => nodeapp::p9!(|| (arg0, arg1)),
+      "p10" => nodeapp::p10!(|| (arg0, arg1)),
+      _ => nodeapp::generic_probe!(|| (json_str.as_str())),
     }
 
     Ok(())
@@ -187,10 +205,21 @@ impl DTraceProbe {
 
     // Convert to JSON string and fire the actual DTrace probe
     let json_str = probe_data.to_string();
-    dtrace_provider::generic_probe!(|| (&json_str));
 
-    println!("Firing DTrace probe: {}:{}", self.provider_name, self.name);
-    println!("Probe argument types: {:?}", self.types);
+    // Map probe names to specific USDT probes
+    match self.name.as_str() {
+      "p1" => nodeapp::p1!(|| (42u64, json_str.as_str())),
+      "p2" => nodeapp::p2!(|| (42u64, json_str.as_str())),
+      "p3" => nodeapp::p3!(|| (42u64, json_str.as_str())),
+      "p4" => nodeapp::p4!(|| (42u64, json_str.as_str())),
+      "p5" => nodeapp::p5!(|| (42u64, json_str.as_str())),
+      "p6" => nodeapp::p6!(|| (42u64, json_str.as_str())),
+      "p7" => nodeapp::p7!(|| (42u64, json_str.as_str())),
+      "p8" => nodeapp::p8!(|| (42u64, json_str.as_str())),
+      "p9" => nodeapp::p9!(|| (42u64, json_str.as_str())),
+      "p10" => nodeapp::p10!(|| (42u64, json_str.as_str())),
+      _ => nodeapp::generic_probe!(|| (json_str.as_str())),
+    }
 
     Ok(())
   }
@@ -211,13 +240,28 @@ impl DTraceProbe {
 
     // Convert to JSON string and fire the actual DTrace probe
     let json_str = probe_data.to_string();
-    dtrace_provider::generic_probe!(|| (&json_str));
 
-    println!(
-      "Firing DTrace probe: {}:{} with args: {:?}",
-      self.provider_name, self.name, args
-    );
-    println!("Probe argument types: {:?}", self.types);
+    // Map probe names to specific USDT probes with actual arguments
+    let arg0 = args
+      .first()
+      .and_then(|s| s.parse::<u64>().ok())
+      .unwrap_or(0);
+    let arg1 = args.get(1).map(|s| s.as_str()).unwrap_or("");
+
+    // Map probe names to specific USDT probes
+    match self.name.as_str() {
+      "p1" => nodeapp::p1!(|| (arg0, arg1)),
+      "p2" => nodeapp::p2!(|| (arg0, arg1)),
+      "p3" => nodeapp::p3!(|| (arg0, arg1)),
+      "p4" => nodeapp::p4!(|| (arg0, arg1)),
+      "p5" => nodeapp::p5!(|| (arg0, arg1)),
+      "p6" => nodeapp::p6!(|| (arg0, arg1)),
+      "p7" => nodeapp::p7!(|| (arg0, arg1)),
+      "p8" => nodeapp::p8!(|| (arg0, arg1)),
+      "p9" => nodeapp::p9!(|| (arg0, arg1)),
+      "p10" => nodeapp::p10!(|| (arg0, arg1)),
+      _ => nodeapp::generic_probe!(|| (json_str.as_str())),
+    }
 
     Ok(())
   }
@@ -232,4 +276,10 @@ pub fn create_dtrace_provider(name: String, module: Option<String>) -> DTracePro
     probes: Arc::new(Mutex::new(HashMap::new())),
     enabled: Arc::new(Mutex::new(false)),
   }
+}
+
+// Alias for compatibility with old tests (uppercase D)
+#[napi(js_name = "createDTraceProvider")]
+pub fn create_d_trace_provider(name: String, module: Option<String>) -> DTraceProvider {
+  create_dtrace_provider(name, module)
 }

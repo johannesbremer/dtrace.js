@@ -111,3 +111,4 @@ module.exports = __napiModule.exports
 module.exports.DTraceProbe = __napiModule.exports.DTraceProbe
 module.exports.DTraceProvider = __napiModule.exports.DTraceProvider
 module.exports.createDtraceProvider = __napiModule.exports.createDtraceProvider
+module.exports.createDTraceProvider = __napiModule.exports.createDTraceProvider
