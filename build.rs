@@ -23,6 +23,7 @@ fn main() {
   }
 
   napi_build::setup();
+  usdt::Builder::new("probes.d").build().unwrap();
 }
 
 fn discover_probes_from_tests() -> Vec<ProbeDefinition> {
