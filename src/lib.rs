@@ -2,7 +2,6 @@
 
 use napi::Result;
 use napi_derive::napi;
-use serde_json;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
@@ -165,7 +164,10 @@ impl DTraceProvider {
     let json_str = probe_data.to_string();
 
     // Map probe names to specific USDT probes with actual arguments
-    let arg0 = args.get(0).and_then(|s| s.parse::<u64>().ok()).unwrap_or(0);
+    let arg0 = args
+      .first()
+      .and_then(|s| s.parse::<u64>().ok())
+      .unwrap_or(0);
     let arg1 = args.get(1).map(|s| s.as_str()).unwrap_or("");
 
     match probe_name.as_str() {
@@ -240,7 +242,10 @@ impl DTraceProbe {
     let json_str = probe_data.to_string();
 
     // Map probe names to specific USDT probes with actual arguments
-    let arg0 = args.get(0).and_then(|s| s.parse::<u64>().ok()).unwrap_or(0);
+    let arg0 = args
+      .first()
+      .and_then(|s| s.parse::<u64>().ok())
+      .unwrap_or(0);
     let arg1 = args.get(1).map(|s| s.as_str()).unwrap_or("");
 
     // Map probe names to specific USDT probes
