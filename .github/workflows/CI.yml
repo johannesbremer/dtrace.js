@@ -34,7 +34,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: 'pnpm'
 
       - name: Install
@@ -65,10 +65,7 @@ jobs:
           - host: macos-latest
             target: aarch64-apple-darwin
             build: pnpm build --target aarch64-apple-darwin
-          - host: windows-latest
-            target: aarch64-pc-windows-msvc
-            build: pnpm build --target aarch64-pc-windows-msvc
-    name: stable - ${{ matrix.settings.target }} - node@20
+    name: ${{ matrix.settings.target }}
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@v4
@@ -77,7 +74,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
       - name: Install
         uses: dtolnay/rust-toolchain@stable
@@ -111,26 +108,17 @@ jobs:
           path: '*.node'
           if-no-files-found: error
   test-linux:
-    # SIMPLIFIED: No matrix, just one clear job.
-    name: Test on Linux x86_64 - Node 22
+    name: x86_64-unknown-linux-gnu && Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
       - name: Prepare Docker parameters
         id: docker_params
         shell: bash
         run: |
           echo "PNPM_STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
-      - name: Install dependencies
-        run: pnpm install --force --frozen-lockfile
-
       - name: Test in DTrace environment
         uses: addnab/docker-run-action@v3
         with:
@@ -142,8 +130,8 @@ jobs:
           run: |
             set -ex
             dnf install -y curl dtrace gcc
-            # Setup Node.js (version 22) and pnpm
-            curl -fsSL https://rpm.nodesource.com/setup_22.x | bash -
+            # Setup Node.js (version 24) and pnpm
+            curl -fsSL https://rpm.nodesource.com/setup_24.x | bash -
             dnf install -y nodejs
             npm install -g pnpm
             # Setup Rust
@@ -168,7 +156,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
       - name: Install dependencies
         run: pnpm install
