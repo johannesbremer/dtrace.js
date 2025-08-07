@@ -65,9 +65,6 @@ jobs:
           - host: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             build: pnpm build --target x86_64-unknown-linux-gnu --use-napi-cross
-          - host: ubuntu-latest
-            target: x86_64-unknown-linux-musl
-            build: pnpm build --target x86_64-unknown-linux-musl -x
           - host: macos-latest
             target: aarch64-apple-darwin
             build: pnpm build --target aarch64-apple-darwin
@@ -77,9 +74,6 @@ jobs:
           - host: ubuntu-latest
             target: aarch64-linux-android
             build: pnpm build --target aarch64-linux-android
-          - host: ubuntu-latest
-            target: aarch64-unknown-linux-musl
-            build: pnpm build --target aarch64-unknown-linux-musl -x
           - host: windows-latest
             target: aarch64-pc-windows-msvc
             build: pnpm build --target aarch64-pc-windows-msvc
@@ -110,17 +104,6 @@ jobs:
             .cargo-cache
             target/
           key: ${{ matrix.settings.target }}-cargo-${{ matrix.settings.host }}
-      - uses: mlugg/setup-zig@v2
-        if: ${{ contains(matrix.settings.target, 'musl') }}
-        with:
-          version: 0.13.0
-      - name: Install cargo-zigbuild
-        uses: taiki-e/install-action@v2
-        if: ${{ contains(matrix.settings.target, 'musl') }}
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          tool: cargo-zigbuild
       - name: Setup toolchain
         run: ${{ matrix.settings.setup }}
         if: ${{ matrix.settings.setup }}
@@ -186,9 +169,7 @@ jobs:
       matrix:
         target:
           - x86_64-unknown-linux-gnu
-          - x86_64-unknown-linux-musl
           - aarch64-unknown-linux-gnu
-          - aarch64-unknown-linux-musl
         node:
           - '18'
           - '20'
@@ -213,15 +194,8 @@ jobs:
               console.log('PLATFORM=linux/amd64')
             }
           " >> $GITHUB_OUTPUT
-          node -e "
-            if ('${{ matrix.target }}'.includes('gnu')) {
-              console.log('IMAGE=oraclelinux:8')
-            } else if ('${{ matrix.target }}'.endsWith('-musl')) {
-              console.log('IMAGE=node:${{ matrix.node }}-alpine')
-            } else {
-              console.log('IMAGE=node:${{ matrix.node }}-slim')
-            }
-          " >> $GITHUB_OUTPUT
+          # Since we only test -gnu targets on Linux now, we always use oraclelinux
+          echo "IMAGE=oraclelinux:8" >> $GITHUB_OUTPUT
           echo "PNPM_STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
       # use --force to download the all platform/arch dependencies
       - name: Install dependencies
@@ -241,12 +215,9 @@ jobs:
           options: -v ${{ steps.docker.outputs.PNPM_STORE_PATH }}:${{ steps.docker.outputs.PNPM_STORE_PATH }} -v ${{ github.workspace }}:${{ github.workspace }} -w ${{ github.workspace }} --platform ${{ steps.docker.outputs.PLATFORM }}
           run: |
             set -ex
-            # If we're in the Oracle Linux container, we need to install our dependencies
-            if [[ "${{ matrix.target }}" == *"-gnu"* ]]; then
-              yum install -y curl dtrace-utils
-              curl -fsSL https://rpm.nodesource.com/setup_${{ matrix.node }}.x | bash -
-              yum install -y nodejs
-            fi
+            yum install -y curl dtrace-utils
+            curl -fsSL https://rpm.nodesource.com/setup_${{ matrix.node }}.x | bash -
+            yum install -y nodejs
             npm run test
   publish:
     name: Publish
