@@ -38,8 +38,14 @@ class DTraceProvider implements LegacyDTraceProvider {
           // Call the callback to get the arguments
           const args = callback(wrappedProbe)
           if (Array.isArray(args)) {
-            // Convert arguments to strings
-            const stringArgs = args.map((arg) => String(arg))
+            // Convert arguments to strings, handling JSON serialization for objects
+            const stringArgs = args.map((arg) => {
+              if (typeof arg === 'object' && arg !== null) {
+                return JSON.stringify(arg)
+              } else {
+                return String(arg)
+              }
+            })
             probe.fireWithArgs(stringArgs)
           } else {
             probe.fire()
@@ -63,7 +69,14 @@ class DTraceProvider implements LegacyDTraceProvider {
       if (typeof callback === 'function') {
         const args = callback(probe as any)
         if (Array.isArray(args)) {
-          const stringArgs = args.map((arg) => String(arg))
+          // Convert arguments to strings, handling JSON serialization for objects
+          const stringArgs = args.map((arg) => {
+            if (typeof arg === 'object' && arg !== null) {
+              return JSON.stringify(arg)
+            } else {
+              return String(arg)
+            }
+          })
           this._provider.fireWithArgs(probeName, stringArgs)
         } else {
           this._provider.fire(probeName)
