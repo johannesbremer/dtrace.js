@@ -8,3 +8,7 @@ index.d.ts
 pnpm-lock.yaml
 .tap/
 .pnpm-store/
+package-template.wasi-browser.js
+package-template.wasi.cjs
+wasi-worker-browser.mjs
+wasi-worker.mjs

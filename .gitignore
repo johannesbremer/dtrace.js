@@ -196,3 +196,9 @@ Temporary Items
 
 .tap/
 .pnpm-store/
+src/generated_probes.rs
+probes.d
+package-template.wasi-browser.js
+package-template.wasi.cjs
+wasi-worker-browser.mjs
+wasi-worker.mjs
