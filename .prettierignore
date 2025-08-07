@@ -7,3 +7,4 @@ target
 index.d.ts
 pnpm-lock.yaml
 .tap/
+.pnpm-store/

@@ -9,7 +9,7 @@ exports.dtraceTest = function (setup, dtargv, test) {
   return function (t) {
     setup()
 
-    var dtrace = spawn('sudo', ['/usr/sbin/dtrace'].concat(dtargv.slice(1)))
+    var dtrace = spawn('/usr/sbin/dtrace', dtargv.slice(1))
 
     var traces = []
     var exit_code
