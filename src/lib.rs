@@ -11,55 +11,8 @@ use usdt::{dtrace_provider, register_probes};
 // Point the macro to the D provider definition file
 dtrace_provider!("probes.d");
 
-// Macro to handle probe name matching and firing with two integers
-macro_rules! fire_probe_two_ints {
-    ($probe_name:expr, $arg0:expr, $arg1:expr) => {
-        match $probe_name.as_str() {
-            "p1" => nodeapp::p1_int_int!(|| ($arg0, $arg1)),
-            "p2" => nodeapp::p2_int_int!(|| ($arg0, $arg1)),
-            "p3" => nodeapp::p3_int_int!(|| ($arg0, $arg1)),
-            "p4" => nodeapp::p4_int_int!(|| ($arg0, $arg1)),
-            "p5" => nodeapp::p5_int_int!(|| ($arg0, $arg1)),
-            "p6" => nodeapp::p6_int_int!(|| ($arg0, $arg1)),
-            "p7" => nodeapp::p7_int_int!(|| ($arg0, $arg1)),
-            "p8" => nodeapp::p8_int_int!(|| ($arg0, $arg1)),
-            "p9" => nodeapp::p9_int_int!(|| ($arg0, $arg1)),
-            "p10" => nodeapp::p10_int_int!(|| ($arg0, $arg1)),
-            "gcprobe" => nodeapp::gcprobe_int_int!(|| ($arg0, $arg1)),
-            "after1" => nodeapp::after1_int_int!(|| ($arg0, $arg1)),
-            "probe0" => nodeapp::probe0_int_int!(|| ($arg0, $arg1)),
-            "probe1" => nodeapp::probe1_int_int!(|| ($arg0, $arg1)),
-            "probe2" => nodeapp::probe2_int_int!(|| ($arg0, $arg1)),
-            "probe3" => nodeapp::probe3_int_int!(|| ($arg0, $arg1)),
-            _ => nodeapp::generic_probe_int_int!(|| ($arg0, $arg1)),
-        }
-    };
-}
-
-// Macro to handle probe name matching and firing
-macro_rules! fire_probe {
-    ($probe_name:expr, $arg0:expr, $arg1:expr) => {
-        match $probe_name.as_str() {
-            "p1" => nodeapp::p1!(|| ($arg0, $arg1)),
-            "p2" => nodeapp::p2!(|| ($arg0, $arg1)),
-            "p3" => nodeapp::p3!(|| ($arg0, $arg1)),
-            "p4" => nodeapp::p4!(|| ($arg0, $arg1)),
-            "p5" => nodeapp::p5!(|| ($arg0, $arg1)),
-            "p6" => nodeapp::p6!(|| ($arg0, $arg1)),
-            "p7" => nodeapp::p7!(|| ($arg0, $arg1)),
-            "p8" => nodeapp::p8!(|| ($arg0, $arg1)),
-            "p9" => nodeapp::p9!(|| ($arg0, $arg1)),
-            "p10" => nodeapp::p10!(|| ($arg0, $arg1)),
-            "gcprobe" => nodeapp::gcprobe!(|| ($arg0, $arg1)),
-            "after1" => nodeapp::after1!(|| ($arg0, $arg1)),
-            "probe0" => nodeapp::probe0!(|| ($arg0, $arg1)),
-            "probe1" => nodeapp::probe1!(|| ($arg0, $arg1)),
-            "probe2" => nodeapp::probe2!(|| ($arg0, $arg1)),
-            "probe3" => nodeapp::probe3!(|| ($arg0, $arg1)),
-            _ => nodeapp::generic_probe!(|| ($arg0, $arg1)),
-        }
-    };
-}
+// Include the auto-generated probe firing code
+include!("generated_probes.rs");
 
 // Define the DTrace provider struct
 #[napi]
@@ -162,16 +115,11 @@ impl DTraceProvider {
     // Convert to JSON string and fire the actual DTrace probe
     let json_str = probe_data.to_string();
 
-    // Handle different probe signatures based on probe name
-    match probe_name.as_str() {
-      "json1" => {
-        nodeapp::json1!(|| (json_str.as_str()));
-      }
-      _ => {
-        // Most probes take (uint64_t, char*)
-        fire_probe!(probe_name, 42u64, json_str.as_str());
-      }
-    }
+    // Use default string type for fire() calls
+    let types = vec!["string".to_string()];
+    let args = vec![json_str];
+
+    fire_probe_by_types(&probe_name, &types, &args);
 
     Ok(())
   }
@@ -194,45 +142,25 @@ impl DTraceProvider {
     // Add a small delay to ensure DTrace is ready
     std::thread::sleep(std::time::Duration::from_micros(100));
 
-    // Determine probe signature based on probe types
-    if let Some(probe) = probe_info {
-      // Check the probe types to determine the correct signature
-      let first_type = probe.types.get(0).map(|s| s.as_str()).unwrap_or("");
-      let second_type = probe.types.get(1).map(|s| s.as_str()).unwrap_or("");
-      
-      match (first_type, second_type) {
-        ("json", _) => {
-          // json probe takes only a string argument
-          let json_arg = args.first().map(|s| s.as_str()).unwrap_or("undefined");
-          nodeapp::json1!(|| (json_arg));
-        }
-        ("int", "int") => {
-          // Two integer arguments
-          let arg0 = args.first().and_then(|s| s.parse::<u64>().ok()).unwrap_or(0);
-          let arg1 = args.get(1).and_then(|s| s.parse::<u64>().ok()).unwrap_or(0);
-          fire_probe_two_ints!(probe_name, arg0, arg1);
-        }
-        _ => {
-          // Default: (uint64_t, char*) - first arg is int, second is string
-          let arg0 = args.first().and_then(|s| s.parse::<u64>().ok()).unwrap_or(0);
-          let arg1 = args.get(1).map(|s| s.as_str()).unwrap_or("undefined");
-          fire_probe!(probe_name, arg0, arg1);
-        }
-      }
+    // Use the probe types if available, otherwise infer from arguments
+    let types = if let Some(probe) = probe_info {
+      probe.types
     } else {
-      // Fallback for unknown probes - assume (uint64_t, char*)
-      match probe_name.as_str() {
-        "json1" => {
-          let json_arg = args.first().map(|s| s.as_str()).unwrap_or("undefined");
-          nodeapp::json1!(|| (json_arg));
-        }
-        _ => {
-          let arg0 = args.first().and_then(|s| s.parse::<u64>().ok()).unwrap_or(0);
-          let arg1 = args.get(1).map(|s| s.as_str()).unwrap_or("undefined");
-          fire_probe!(probe_name, arg0, arg1);
-        }
-      }
-    }
+      // Infer types from arguments for unknown probes
+      args
+        .iter()
+        .map(|arg| {
+          if arg.parse::<u64>().is_ok() {
+            "int".to_string()
+          } else {
+            "string".to_string()
+          }
+        })
+        .collect()
+    };
+
+    // Fire the probe using dynamic dispatch
+    fire_probe_by_types(&probe_name, &types, &args);
 
     Ok(())
   }
@@ -256,42 +184,19 @@ impl DTraceProbe {
     // Convert to JSON string and fire the actual DTrace probe
     let json_str = probe_data.to_string();
 
-    // Handle different probe signatures based on probe name
-    match self.name.as_str() {
-      "json1" => {
-        nodeapp::json1!(|| (json_str.as_str()));
-      }
-      _ => {
-        // Most probes take (uint64_t, char*)
-        fire_probe!(self.name, 42u64, json_str.as_str());
-      }
-    }
+    // Use default string type for fire() calls
+    let types = vec!["string".to_string()];
+    let args = vec![json_str];
+
+    fire_probe_by_types(&self.name, &types, &args);
 
     Ok(())
   }
 
-  #[napi]
+  #[napi(js_name = "fireWithArgs")]
   pub fn fire_with_args(&self, args: Vec<String>) -> Result<()> {
-    // Handle different probe signatures based on probe name
-    match self.name.as_str() {
-      "json1" => {
-        // json1 probe takes only a string argument
-        let json_arg = args.first().map(|s| s.as_str()).unwrap_or("undefined");
-        nodeapp::json1!(|| (json_arg));
-      }
-      _ => {
-        // Most probes take (uint64_t, char*)
-        let arg0 = args
-          .first()
-          .and_then(|s| s.parse::<u64>().ok())
-          .unwrap_or(0);
-        let arg1 = args.get(1).map(|s| s.as_str()).unwrap_or("undefined");
-
-        // Use macro to fire the appropriate probe with actual arguments
-        fire_probe!(self.name, arg0, arg1);
-      }
-    }
-
+    // Use the probe's stored types for dynamic dispatch
+    fire_probe_by_types(&self.name, &self.types, &args);
     Ok(())
   }
 }

@@ -196,3 +196,4 @@ Temporary Items
 
 .tap/
 .pnpm-store/
+src/generated_probes.rs
