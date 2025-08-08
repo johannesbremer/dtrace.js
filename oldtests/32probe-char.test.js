@@ -1,9 +1,8 @@
-require('ts-node/register')
 /*
 This file is forked from the following 2-Clause BSD licensed repo:
 https://github.com/chrisa/node-dtrace-provider/tree/e9d860eaf553b489bd897e15bd0153f38b8e73a8
 */
-var test = require('tap').test
+var test = require('ava')
 var format = require('util').format
 var dtest = require('./dtrace-test').dtraceTest
 
@@ -65,10 +64,10 @@ test(
       )
       provider.enable()
     },
-    ['dtrace', '-qn', dscript, '-c', format('node %s/32probe-char_fire.js', __dirname)],
+    ['dtrace', '-qn', dscript, '-c', format('node -r ts-node/register %s/32probe-char_fire.js', __dirname)],
     function (t, exit_code, traces) {
-      t.notOk(exit_code, 'dtrace exited cleanly')
-      t.equal(traces.length, 1)
+      t.falsy(exit_code, 'dtrace exited cleanly')
+      t.is(traces.length, 1)
 
       var letters = [
         'a',
@@ -107,7 +106,7 @@ test(
 
       var traced = traces[0].split(' ')
       for (var i = 0; i < 32; i++) {
-        t.equal(traced[i], letters[i], format('arg%d of a 32-arg probe firing should be %s', i, letters[i]))
+        t.is(traced[i], letters[i], format('arg%d of a 32-arg probe firing should be %s', i, letters[i]))
       }
 
       provider.disable()
