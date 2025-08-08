@@ -10,7 +10,13 @@ test(
   'adding probes to an existing provider',
   dtest(
     function () {},
-    ['dtrace', '-Zqn', 'nodeapp*:::{ printf("%d\\n", arg0); }', '-c', format('node -r ts-node/register %s/add-probes_fire.js', __dirname)],
+    [
+      'dtrace',
+      '-Zqn',
+      'nodeapp*:::{ printf("%d\\n", arg0); }',
+      '-c',
+      format('node -r ts-node/register %s/add-probes_fire.js', __dirname),
+    ],
     function (t, exit_code, traces) {
       t.falsy(exit_code, 'dtrace exited cleanly')
       t.is(traces.length, 46)
