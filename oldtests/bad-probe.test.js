@@ -1,9 +1,8 @@
-require('ts-node/register')
 /*
 This file is forked from the following 2-Clause BSD licensed repo:
 https://github.com/chrisa/node-dtrace-provider/tree/e9d860eaf553b489bd897e15bd0153f38b8e73a8
 */
-var test = require('tap').test
+var test = require('ava')
 var fmt = require('util').format
 var d = require('../dtrace-provider.ts')
 
@@ -32,6 +31,4 @@ test('firing non-existent probes', function (t) {
   tryName('typeobj2')
   tryName('typenan')
   tryName('typenum')
-
-  t.end()
 })

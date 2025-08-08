@@ -64,9 +64,7 @@
     "format:rs": "cargo fmt",
     "lint": "oxlint",
     "prepublishOnly": "napi prepublish -t npm",
-    "test": "npm run test:ava && npm run test:tap",
-    "test:ava": "ava",
-    "test:tap": "NODE_NO_READLINE=1 tap oldtests/*.test.js",
+    "test": "ava --serial",
     "version": "napi version"
   },
   "devDependencies": {
@@ -86,7 +84,6 @@
     "npm-run-all2": "^8.0.4",
     "oxlint": "^1.8.0",
     "prettier": "^3.6.2",
-    "tap": "^21.1.0",
     "tinybench": "^4.0.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
@@ -104,7 +101,8 @@
   },
   "ava": {
     "files": [
-      "tests/**/*"
+      "tests/**/*",
+      "oldtests/*.test.js"
     ],
     "extensions": {
       "ts": "module",
@@ -116,8 +114,7 @@
       "TS_NODE_PROJECT": "./tsconfig.json"
     },
     "nodeArguments": [
-      "--import",
-      "@oxc-node/core/register"
+      "--import=ts-node/register"
     ]
   },
   "prettier": {

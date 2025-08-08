@@ -1,9 +1,8 @@
-require('ts-node/register')
 /*
 This file is forked from the following 2-Clause BSD licensed repo:
 https://github.com/chrisa/node-dtrace-provider/tree/e9d860eaf553b489bd897e15bd0153f38b8e73a8
 */
-var test = require('tap').test
+var test = require('ava')
 var format = require('util').format
 var dtest = require('./dtrace-test').dtraceTest
 
@@ -16,19 +15,21 @@ test(
       '-Zqn',
       'nodeapp$target:::json1{ this->j = copyinstr(arg0); printf("%s\\n%d\\n%s\\n", this->j, strtoll(json(this->j, "foo")), json(this->j, "bar")) }',
       '-c',
-      format('node %s/json-args_fire.js', __dirname),
+      format('node -r ts-node/register %s/json-args_fire.js', __dirname),
     ],
     function (t, exit_code, traces) {
       // skip if dtrace failed; assume no json() sub
       skip = exit_code == 0 ? 0 : 1
 
-      t.test('json tests, need json() subroutine', { skip: skip }, function (t) {
-        t.notOk(exit_code, 'dtrace exited cleanly')
-        t.equal(traces[0], '{"foo":42,"bar":"forty-two"}')
-        t.equal(traces[1], '42')
-        t.equal(traces[2], 'forty-two')
-        t.end()
-      })
+      if (skip) {
+        t.pass('skipping json tests - no json() subroutine')
+        return
+      }
+
+      t.falsy(exit_code, 'dtrace exited cleanly')
+      t.is(traces[0], '{"foo":42,"bar":"forty-two"}')
+      t.is(traces[1], '42')
+      t.is(traces[2], 'forty-two')
     },
   ),
 )

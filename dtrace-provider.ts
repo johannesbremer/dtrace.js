@@ -6,14 +6,15 @@ import {
 
 // Types for the old dtrace-provider API compatibility
 interface LegacyDTraceProbe {
-  fire(callback?: (probe: LegacyDTraceProbe) => any[]): void
+  // Old API: optional callback, followed by optional args passed to callback
+  fire(callback?: (...cbArgs: any[]) => any[], ...cbArgs: any[]): void
 }
 
 interface LegacyDTraceProvider {
   addProbe(name: string, ...types: string[]): LegacyDTraceProbe
   enable(): void
   disable(): void
-  fire(probeName: string, callback?: (probe: LegacyDTraceProbe) => any[]): void
+  fire(probeName: string, callback?: (...cbArgs: any[]) => any[], ...cbArgs: any[]): void
 }
 
 // Compatibility wrapper for the old dtrace-provider API
@@ -33,26 +34,21 @@ class DTraceProvider implements LegacyDTraceProvider {
 
     // Create a wrapper probe with the old fire API
     const wrappedProbe: LegacyDTraceProbe = {
-      fire: (callback?: (probe: LegacyDTraceProbe) => any[]) => {
+      fire: (callback?: (...cbArgs: any[]) => any[], ...cbArgs: any[]) => {
         if (typeof callback === 'function') {
-          // Call the callback to get the arguments
-          const args = callback(wrappedProbe)
+          // Call the callback with user-provided args
+          const args = callback(...cbArgs)
           if (Array.isArray(args)) {
-            // Convert arguments to strings, handling JSON serialization for objects
             const stringArgs = args.map((arg) => {
-              if (typeof arg === 'object' && arg !== null) {
-                return JSON.stringify(arg)
-              } else {
-                return String(arg)
-              }
+              if (typeof arg === 'object' && arg !== null) return JSON.stringify(arg)
+              return String(arg)
             })
             probe.fireWithArgs(stringArgs)
-          } else {
-            probe.fire()
+            return
           }
-        } else {
-          probe.fire()
         }
+        // No callback or non-array result: fire with defaults
+        probe.fire()
       },
     }
 
@@ -60,31 +56,25 @@ class DTraceProvider implements LegacyDTraceProvider {
     return wrappedProbe
   }
 
-  fire(probeName: string, callback?: (probe: LegacyDTraceProbe) => any[]): void {
+  fire(probeName: string, callback?: (...cbArgs: any[]) => any[], ...cbArgs: any[]): void {
     const probe = this._probes.get(probeName)
     if (probe) {
-      probe.fire(callback)
-    } else {
-      // If probe doesn't exist, call the native provider fire method
-      if (typeof callback === 'function') {
-        const args = callback(probe as any)
-        if (Array.isArray(args)) {
-          // Convert arguments to strings, handling JSON serialization for objects
-          const stringArgs = args.map((arg) => {
-            if (typeof arg === 'object' && arg !== null) {
-              return JSON.stringify(arg)
-            } else {
-              return String(arg)
-            }
-          })
-          this._provider.fireWithArgs(probeName, stringArgs)
-        } else {
-          this._provider.fire(probeName)
-        }
-      } else {
-        this._provider.fire(probeName)
+      probe.fire(callback as any, ...cbArgs)
+      return
+    }
+    // Fall back to native provider
+    if (typeof callback === 'function') {
+      const args = callback(...cbArgs)
+      if (Array.isArray(args)) {
+        const stringArgs = args.map((arg) => {
+          if (typeof arg === 'object' && arg !== null) return JSON.stringify(arg)
+          return String(arg)
+        })
+        this._provider.fireWithArgs(probeName, stringArgs)
+        return
       }
     }
+    this._provider.fire(probeName)
   }
 
   enable(): void {
