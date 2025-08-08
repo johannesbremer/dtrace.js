@@ -12,3 +12,7 @@ package-template.wasi-browser.js
 package-template.wasi.cjs
 wasi-worker-browser.mjs
 wasi-worker.mjs
+dtrace-provider.wasi-browser.js
+dtrace-provider.wasi.cjs
+index.js
+index.d.ts
