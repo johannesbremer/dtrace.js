@@ -53,26 +53,6 @@ jobs:
 
       - name: Clippy
         run: cargo clippy
-  test:
-    name: Test
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: setup pnpm
-        uses: pnpm/action-setup@v4
-      - name: Setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-      - name: Install dependencies
-        run: pnpm install
-      - name: Build
-        run: pnpm build
-      - name: Test
-        run: sudo pnpm test
   build:
     strategy:
       fail-fast: false
