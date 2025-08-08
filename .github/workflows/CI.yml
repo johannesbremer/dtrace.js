@@ -124,6 +124,7 @@ jobs:
         with:
           image: oraclelinux:9
           options: >-
+            --cap-add=SYS_PTRACE
             -v ${{ steps.docker_params.outputs.PNPM_STORE_PATH }}:${{ steps.docker_params.outputs.PNPM_STORE_PATH }}
             -v ${{ github.workspace }}:${{ github.workspace }}
             -w ${{ github.workspace }}
@@ -141,6 +142,7 @@ jobs:
             source "$HOME/.cargo/env"
             # Build and Test
             echo "Building and testing the native module..."
+            rm -rf node_modules
             pnpm install --frozen-lockfile
             pnpm build
             pnpm test
