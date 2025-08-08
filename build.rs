@@ -148,32 +148,12 @@ fn normalize_type(type_str: &str) -> String {
   }
 }
 
-fn generate_signature_suffix(signature: &[String]) -> String {
-  if signature.is_empty() {
-    return String::new();
-  }
-
-  signature
-    .iter()
-    .map(|t| match t.as_str() {
-      "int" => "int",
-      "string" => "str",
-      "json" => "json",
-      _ => "unk",
-    })
-    .collect::<Vec<_>>()
-    .join("_")
-}
-
 fn generate_probes_d(probes: &[ProbeDefinition]) -> std::io::Result<()> {
   let mut content = String::new();
   content.push_str("provider nodeapp {\n");
 
-  // Create unique probe names for each distinct signature
-  let mut unique_probes = HashMap::new();
-  let mut probe_variants = HashMap::<String, Vec<Vec<String>>>::new();
-
   // Group all signatures by probe name
+  let mut probe_variants: HashMap<String, Vec<Vec<String>>> = HashMap::new();
   for probe in probes {
     probe_variants
       .entry(probe.name.clone())
@@ -181,123 +161,67 @@ fn generate_probes_d(probes: &[ProbeDefinition]) -> std::io::Result<()> {
       .push(probe.arg_types.clone());
   }
 
-  // Remove duplicates and create unique probe names with descriptive suffixes
+  // Build merged base signatures: max arity; INT WINS over string/json per position
+  let mut base_probes: HashMap<String, Vec<String>> = HashMap::new();
   for (base_name, signatures) in probe_variants {
-    let mut unique_signatures = Vec::new();
+    let mut unique_signatures: Vec<Vec<String>> = Vec::new();
     for sig in signatures {
       if !unique_signatures.contains(&sig) {
         unique_signatures.push(sig);
       }
     }
 
-    // Generate descriptive names for ALL signatures (no "original" names)
-    for signature in unique_signatures.iter() {
-      let suffix = generate_signature_suffix(signature);
-      let variant_name = if suffix.is_empty() {
-        // Only no-argument probes keep the base name
-        base_name.clone()
-      } else {
-        // All other probes get descriptive suffixes
-        format!("{base_name}_{suffix}")
-      };
-      unique_probes.insert(variant_name, signature.clone());
+    let max_arity = unique_signatures.iter().map(|s| s.len()).max().unwrap_or(0);
+    let mut merged: Vec<String> = vec!["string".to_string(); max_arity];
+    for sig in unique_signatures.iter() {
+      for (i, t) in sig.iter().enumerate() {
+        if t == "int" {
+          merged[i] = "int".to_string();
+        } else if merged[i] != "int" {
+          // keep string if no int was seen for this position
+          merged[i] = "string".to_string();
+        }
+      }
     }
+    base_probes.insert(base_name, merged);
   }
 
-  // Generate probe definitions with unique names
-  for (name, signature) in &unique_probes {
+  // Generate probe definitions with base names
+  for (name, signature) in &base_probes {
     if signature.is_empty() {
       content.push_str(&format!("    probe {name}();\n"));
     } else {
-      // Generate DTrace types
       let dtrace_types = signature
         .iter()
         .map(|t| match t.as_str() {
           "int" => "uint64_t",
-          "json" | "string" => "char*",
           _ => "char*",
         })
         .collect::<Vec<_>>()
         .join(", ");
-
       content.push_str(&format!("    probe {name}({dtrace_types});\n"));
     }
   }
-
-  // Add standard probes
-  content.push_str("    probe probe_enable();\n");
-  content.push_str("    probe probe_disable();\n");
-  content.push_str("    probe provider_enabled(char*);\n");
-  content.push_str("    probe provider_disabled(char*);\n");
   content.push_str("};\n");
 
   fs::write("probes.d", content)?;
 
-  // Generate the dynamic firing code with unique probe names
+  // Generate the dynamic firing code for base probe names
   let mut firing_code = String::from("// Auto-generated probe firing code\n");
   firing_code
     .push_str("fn fire_probe_by_types(probe_name: &str, _types: &[String], args: &[String]) {\n");
-  firing_code
-    .push_str("    // Map probe name + arg types to unique probe name based on type inference\n");
-  firing_code.push_str("    let inferred_types: Vec<String> = args.iter().map(|arg| {\n");
-  firing_code.push_str("        if arg.parse::<u64>().is_ok() { \"int\".to_string() }\n");
-  firing_code.push_str("        else { \"string\".to_string() }\n");
-  firing_code.push_str("    }).collect();\n\n");
-
-  firing_code.push_str("    let signature_key = inferred_types.join(\",\");\n\n");
-
-  // Generate mappings based on signatures
-  let mut base_name_to_variants = HashMap::<String, Vec<(Vec<String>, String)>>::new();
-  for (unique_name, signature) in &unique_probes {
-    let base_name = if unique_name.contains('_') {
-      unique_name.split('_').next().unwrap_or(unique_name)
-    } else {
-      unique_name
-    };
-
-    base_name_to_variants
-      .entry(base_name.to_string())
-      .or_default()
-      .push((signature.clone(), unique_name.clone()));
-  }
-
-  firing_code.push_str("    let unique_probe_name = match probe_name {\n");
-
-  for (base_name, variants) in &base_name_to_variants {
-    firing_code.push_str(&format!("        \"{base_name}\" => {{\n"));
-    firing_code.push_str("            match signature_key.as_str() {\n");
-
-    for (signature, unique_name) in variants {
-      let signature_str = signature.join(",");
-      firing_code.push_str(&format!(
-        "                \"{signature_str}\" => \"{unique_name}\",\n"
-      ));
-    }
-
-    firing_code.push_str(&format!(
-      "                _ => \"{base_name}\", // fallback to first variant\n"
-    ));
-    firing_code.push_str("            }\n");
-    firing_code.push_str("        },\n");
-  }
-
-  firing_code.push_str("        _ => probe_name, // fallback to original name\n");
-  firing_code.push_str("    };\n\n");
-  firing_code.push_str("    match unique_probe_name {\n");
-
-  for (name, signature) in &unique_probes {
+  firing_code.push_str("    match probe_name {\n");
+  for (name, signature) in &base_probes {
     firing_code.push_str(&format!("        \"{name}\" => {{\n"));
-
     if signature.is_empty() {
       firing_code.push_str(&format!("            nodeapp::{name}!(|| ());\n"));
     } else {
-      // Generate argument conversion based on signature
       let mut arg_conversions = Vec::new();
       for (i, arg_type) in signature.iter().enumerate() {
         let access_method = if i == 0 {
-          "args.first()"
+          "args.first()".to_string()
         } else {
-          &format!("args.get({i})")
+          format!("args.get({i})")
         };
         match arg_type.as_str() {
           "int" => {
@@ -305,63 +229,48 @@ fn generate_probes_d(probes: &[ProbeDefinition]) -> std::io::Result<()> {
               "{access_method}.and_then(|s| s.parse::<u64>().ok()).unwrap_or(0)"
             ));
           }
-          "json" | "string" => {
-            arg_conversions.push(format!(
-              "{access_method}.map(|s| s.as_str()).unwrap_or(\"\")"
-            ));
-          }
           _ => {
             arg_conversions.push(format!(
-              "{access_method}.map(|s| s.as_str()).unwrap_or(\"\")"
+              "{access_method}.map(|s| s.as_str()).unwrap_or(\"undefined\")"
             ));
           }
         }
       }
 
-      if arg_conversions.len() == 1 {
-        let arg0_conv = &arg_conversions[0];
-        firing_code.push_str(&format!("            let arg0 = {arg0_conv};\n"));
-        firing_code.push_str(&format!("            nodeapp::{name}!(|| (arg0));\n"));
-      } else if arg_conversions.len() == 2 {
-        let arg0_conv = &arg_conversions[0];
-        let arg1_conv = &arg_conversions[1];
-        firing_code.push_str(&format!("            let arg0 = {arg0_conv};\n"));
-        firing_code.push_str(&format!("            let arg1 = {arg1_conv};\n"));
-        firing_code.push_str(&format!("            nodeapp::{name}!(|| (arg0, arg1));\n"));
-      } else if arg_conversions.len() == 3 {
-        let arg0_conv = &arg_conversions[0];
-        let arg1_conv = &arg_conversions[1];
-        let arg2_conv = &arg_conversions[2];
-        firing_code.push_str(&format!("            let arg0 = {arg0_conv};\n"));
-        firing_code.push_str(&format!("            let arg1 = {arg1_conv};\n"));
-        firing_code.push_str(&format!("            let arg2 = {arg2_conv};\n"));
-        firing_code.push_str(&format!(
-          "            nodeapp::{name}!(|| (arg0, arg1, arg2));\n"
-        ));
+      match arg_conversions.len() {
+        1 => {
+          let a0 = &arg_conversions[0];
+          firing_code.push_str(&format!("            let arg0 = {a0};\n"));
+          firing_code.push_str(&format!("            nodeapp::{name}!(|| (arg0));\n"));
+        }
+        2 => {
+          let a0 = &arg_conversions[0];
+          let a1 = &arg_conversions[1];
+          firing_code.push_str(&format!("            let arg0 = {a0};\n"));
+          firing_code.push_str(&format!("            let arg1 = {a1};\n"));
+          firing_code.push_str(&format!("            nodeapp::{name}!(|| (arg0, arg1));\n"));
+        }
+        3 => {
+          let a0 = &arg_conversions[0];
+          let a1 = &arg_conversions[1];
+          let a2 = &arg_conversions[2];
+          firing_code.push_str(&format!("            let arg0 = {a0};\n"));
+          firing_code.push_str(&format!("            let arg1 = {a1};\n"));
+          firing_code.push_str(&format!("            let arg2 = {a2};\n"));
+          firing_code.push_str(&format!(
+            "            nodeapp::{name}!(|| (arg0, arg1, arg2));\n"
+          ));
+        }
+        _ => {}
       }
     }
-
     firing_code.push_str("        },\n");
   }
 
-  // Add standard probes
-  firing_code.push_str("        \"probe_enable\" => nodeapp::probe_enable!(|| ()),\n");
-  firing_code.push_str("        \"probe_disable\" => nodeapp::probe_disable!(|| ()),\n");
-  firing_code.push_str("        \"provider_enabled\" => {\n");
-  firing_code
-    .push_str("            let arg0 = args.first().map(|s| s.as_str()).unwrap_or(\"\");\n");
-  firing_code.push_str("            nodeapp::provider_enabled!(|| (arg0));\n");
-  firing_code.push_str("        },\n");
-  firing_code.push_str("        \"provider_disabled\" => {\n");
-  firing_code
-    .push_str("            let arg0 = args.first().map(|s| s.as_str()).unwrap_or(\"\");\n");
-  firing_code.push_str("            nodeapp::provider_disabled!(|| (arg0));\n");
-  firing_code.push_str("        },\n");
   firing_code.push_str("        _ => {}\n");
   firing_code.push_str("    }\n");
   firing_code.push_str("}\n");
 
-  // Write the generated firing code to a file that lib.rs can include
   fs::write("src/generated_probes.rs", firing_code)?;
 
   Ok(())
