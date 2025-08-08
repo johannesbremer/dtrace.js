@@ -32,7 +32,14 @@ exports.dtraceTest = function (setup, dtargv, test) {
           })
 
         try {
-          test(t, exit_code, traces)
+          // Compatibility shim: support legacy assertions like t.not.is
+          const tshim = Object.create(t)
+          if (!tshim.not || typeof tshim.not.is !== 'function') {
+            tshim.not = {
+              is: (actual, expected, message) => t.not(actual, expected, message),
+            }
+          }
+          test(tshim, exit_code, traces)
           resolve()
         } catch (error) {
           reject(error)

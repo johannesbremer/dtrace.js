@@ -31,6 +31,7 @@ pub struct DTraceProbe {
   name: String,
   types: Vec<String>,
   provider_name: String,
+  enabled: Arc<Mutex<bool>>, // mirror provider enabled state
 }
 
 #[napi]
@@ -41,6 +42,7 @@ impl DTraceProvider {
       name: name.clone(),
       types,
       provider_name: self.name.clone(),
+      enabled: self.enabled.clone(),
     };
 
     if let Ok(mut probes) = self.probes.lock() {
@@ -119,7 +121,7 @@ impl DTraceProvider {
     };
 
     // Fire the probe using dynamic dispatch
-    fire_probe_by_types(&probe_name, &types, &args);
+    fire_probe_by_types(&self.name, &probe_name, &types, &args);
 
     Ok(())
   }
@@ -149,7 +151,7 @@ impl DTraceProvider {
       args
         .iter()
         .map(|arg| {
-          if arg.parse::<u64>().is_ok() {
+          if arg.chars().all(|c| c.is_ascii_digit()) && !arg.is_empty() {
             "int".to_string()
           } else {
             "string".to_string()
@@ -159,7 +161,7 @@ impl DTraceProvider {
     };
 
     // Fire the probe using dynamic dispatch
-    fire_probe_by_types(&probe_name, &types, &args);
+    fire_probe_by_types(&self.name, &probe_name, &types, &args);
 
     Ok(())
   }
@@ -169,8 +171,11 @@ impl DTraceProvider {
 impl DTraceProbe {
   #[napi]
   pub fn fire(&self) -> Result<()> {
-    // Touch provider_name to avoid dead_code warning when not otherwise used
-    let _ = self.provider_name.len();
+    // Skip if provider disabled
+    let enabled = self.enabled.lock().map(|e| *e).unwrap_or(false);
+    if !enabled {
+      return Ok(());
+    }
 
     // Build default args based on declared probe types
     let mut args: Vec<String> = Vec::with_capacity(self.types.len());
@@ -181,15 +186,20 @@ impl DTraceProbe {
       }
     }
 
-    fire_probe_by_types(&self.name, &self.types, &args);
+    fire_probe_by_types(&self.provider_name, &self.name, &self.types, &args);
 
     Ok(())
   }
 
   #[napi(js_name = "fireWithArgs")]
   pub fn fire_with_args(&self, args: Vec<String>) -> Result<()> {
+    // Skip if provider disabled
+    let enabled = self.enabled.lock().map(|e| *e).unwrap_or(false);
+    if !enabled {
+      return Ok(());
+    }
     // Use the probe's stored types for dynamic dispatch
-    fire_probe_by_types(&self.name, &self.types, &args);
+    fire_probe_by_types(&self.provider_name, &self.name, &self.types, &args);
     Ok(())
   }
 }
