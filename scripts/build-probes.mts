@@ -51,6 +51,12 @@ function parseTypes(rawList: string): string[] {
 }
 
 function extractFileSignatures(content: string): Signature[] {
+  // Reset global regex state to ensure fresh scanning per file. Without this,
+  // a previous exec() that ended mid‑string (or certain V8 edge cases) can
+  // leave lastIndex at a non‑zero position and cause the first addProbe in
+  // the next file (especially short single‑arg variants like after1|int) to
+  // be skipped. Being explicit here removes any engine‑specific ambiguity.
+  ADD_PROBE_RE.lastIndex = 0
   const sigs: Signature[] = []
   let m: RegExpExecArray | null
   while ((m = ADD_PROBE_RE.exec(content))) {
