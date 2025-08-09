@@ -75,6 +75,31 @@ function scanAll(): ProbeAgg[] {
       while ((m = staticRe.exec(content))) {
         add(m[2], parseTypes(m[3] || ''))
       }
+      // Handle dynamic probe patterns like 'probe' + i in loops
+      const loopRanges: Record<string, [number, number]> = {}
+      const loopRe =
+        /for\s*\(\s*(?:var|let|const)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*(\d+)\s*;[^;]*<\s*(\d+)\s*;[^)]*\+\+\s*\)/g
+      let lm: RegExpExecArray | null
+      while ((lm = loopRe.exec(content))) {
+        const start = parseInt(lm[2], 10)
+        const end = parseInt(lm[3], 10)
+        if (end > start) loopRanges[lm[1]] = [start, end]
+      }
+      const dynRe =
+        /\.addProbe\s*\(\s*(['"`])([A-Za-z_][A-Za-z0-9_]*)\1\s*\+\s*([A-Za-z_][A-Za-z0-9_]*)\s*(?:,\s*(['"`])([^'"`]+)\4)?\s*\)/g
+      let dm: RegExpExecArray | null
+      while ((dm = dynRe.exec(content))) {
+        const prefix = dm[2]
+        const varName = dm[3]
+        const singleType = dm[5]
+        const types = singleType ? parseTypes(',' + JSON.stringify(singleType)) : []
+        if (loopRanges[varName]) {
+          const [start, end] = loopRanges[varName]
+          for (let i = start; i < end; i++) {
+            add(prefix + i, types)
+          }
+        }
+      }
     }
   }
   // legacy dynamic numeric probes (probeN) must have at least one int
