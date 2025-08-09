@@ -3,6 +3,39 @@ import {
   DTraceProbe as NativeDTraceProbe,
   createDTraceProvider as nativeCreateDTraceProvider,
 } from './index.js'
+import fs from 'node:fs'
+import crypto from 'node:crypto'
+import path from 'node:path'
+
+// Runtime manifest ↔ binary hash check (best-effort, non-fatal unless DTRACE_STRICT=1)
+;(function runtimeProbeHashGuard() {
+  try {
+    const manifestPath = process.env.DTRACE_MANIFEST || path.join(process.cwd(), 'probes.manifest.json')
+    if (!fs.existsSync(manifestPath)) return
+    const manifestHash = crypto.createHash('sha256').update(fs.readFileSync(manifestPath)).digest('hex')
+    // Find a sidecar hash file (any *.node.probes.sha256 in cwd)
+    const sidecars = fs.readdirSync(process.cwd()).filter((f) => f.endsWith('.node.probes.sha256'))
+    let builtHash: string | null = null
+    for (const sc of sidecars) {
+      try {
+        builtHash = fs.readFileSync(sc, 'utf8').trim()
+        break
+      } catch {}
+    }
+    if (!builtHash) return
+    if (builtHash !== manifestHash) {
+      const msg = `[dtrace-provider] Probes manifest hash mismatch (runtime ${manifestHash} != built ${builtHash}). Run "npm run build-probes" to rebuild.`
+      if (process.env.DTRACE_STRICT === '1' || process.env.NODE_ENV !== 'production') {
+        throw new Error(msg)
+      } else {
+        // eslint-disable-next-line no-console
+        console.warn(msg)
+      }
+    }
+  } catch (e) {
+    if (process.env.DTRACE_STRICT === '1') throw e
+  }
+})()
 
 // Types for the old dtrace-provider API compatibility
 interface LegacyDTraceProbe {
