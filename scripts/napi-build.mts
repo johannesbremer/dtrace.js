@@ -19,6 +19,11 @@ for (let i = 0; i < userArgs.length; i++) {
 }
 const baseArgs = ['build', '--platform', '--release', '--no-strip']
 if (!hasOutputDir) baseArgs.push('--output-dir', '.')
+// Ensure JS package name is correct (prevents default template name artifacts on Windows)
+const hasJsName = userArgs.some((a) => a === '--js-package-name' || a.startsWith('--js-package-name='))
+if (process.platform === 'win32' && !hasJsName) {
+  baseArgs.push('--js-package-name', 'dtrace-provider')
+}
 const finalArgs = [...baseArgs, ...userArgs]
 const r = spawnSync('napi', finalArgs, { stdio: 'inherit' })
 if (r.status) process.exit(r.status)
