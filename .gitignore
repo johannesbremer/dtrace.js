@@ -9,6 +9,9 @@ dtrace-provider.wasi-browser.js
 dtrace-provider.wasi.cjs
 index.js
 index.d.ts
+probes.manifest.json
+*.sha256
+.dtrace-signatures.json
 
 ### Created by https://www.gitignore.io
 ### Rust ###
