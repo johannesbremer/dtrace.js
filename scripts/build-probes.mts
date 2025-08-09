@@ -18,6 +18,7 @@ import path from 'node:path'
 const args = process.argv.slice(2)
 const WATCH = args.includes('--watch')
 const FORCE = args.includes('--force')
+const GENERATE_ONLY = args.includes('--generate')
 const DEBUG = process.env.DTRACE_DEBUG_WATCH === '1'
 
 const manifestScript = new URL('./emit-manifest.mts', import.meta.url).pathname
@@ -112,7 +113,9 @@ function regenManifestAndBuild() {
     console.error('[dtrace-provider] manifest generation failed')
     process.exit(1)
   }
-  const child = spawn('pnpm', ['build'], { stdio: 'inherit' })
+  // Invoke napi CLI directly to avoid re-entering package.json scripts which can
+  // inject flags like --silent or cause recursive build-probes generation.
+  const child = spawn('napi', ['build', '--platform', '--release', '--no-strip'], { stdio: 'inherit' })
   child.on('close', (code) => {
     if (code !== 0) process.exit(code || 1)
     const manifestContent = fs.readFileSync(manifestPath, 'utf8')
@@ -191,8 +194,16 @@ function recomputeAndMaybeBuild(oldList: string[], reasonFile?: string) {
 }
 
 if (!WATCH) {
-  run('node', [manifestScript, '--rescan'])
-  regenManifestAndBuild()
+  if (GENERATE_ONLY) {
+    // Generate / refresh manifest only (no native build). Used by CI 'build' script
+    // to ensure probes.manifest.json exists before cargo build without causing
+    // recursive "pnpm build" invocation.
+    run('node', [manifestScript, '--rescan'])
+    process.exit(0)
+  } else {
+    run('node', [manifestScript, '--rescan'])
+    regenManifestAndBuild()
+  }
 } else {
   const { default: chokidar } = await import('chokidar')
   console.log('[dtrace-provider] watch mode (signature diff) enabled')
