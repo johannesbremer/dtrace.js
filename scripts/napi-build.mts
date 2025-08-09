@@ -1,9 +1,24 @@
 #!/usr/bin/env node
-// TypeScript wrapper for `napi build` to normalize args and play well with pnpm.
+// TypeScript wrapper for `napi build` to normalize args, ignore pnpm noise, ensure artifact at repo root.
 import { spawnSync } from 'node:child_process'
 
-// Base arguments; allow caller (CI) to append e.g. --target x86_64-pc-windows-msvc
+const DISALLOWED = new Set(['--silent'])
+const userArgsRaw = process.argv.slice(2)
+const userArgs = userArgsRaw.filter((a) => !DISALLOWED.has(a))
+// Determine if user already provided output dir
+let hasOutputDir = false
+for (let i = 0; i < userArgs.length; i++) {
+  if (userArgs[i] === '--output-dir' || userArgs[i] === '-o') {
+    hasOutputDir = true
+    break
+  }
+  if (userArgs[i].startsWith('--output-dir=')) {
+    hasOutputDir = true
+    break
+  }
+}
 const baseArgs = ['build', '--platform', '--release', '--no-strip']
-const extra = process.argv.slice(2)
-const r = spawnSync('napi', [...baseArgs, ...extra], { stdio: 'inherit' })
+if (!hasOutputDir) baseArgs.push('--output-dir', '.')
+const finalArgs = [...baseArgs, ...userArgs]
+const r = spawnSync('napi', finalArgs, { stdio: 'inherit' })
 if (r.status) process.exit(r.status)

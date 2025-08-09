@@ -106,6 +106,16 @@ jobs:
       - name: Build
         run: ${{ matrix.settings.build }}
         shell: bash
+      - name: Debug artifacts (windows)
+        if: ${{ matrix.settings.host == 'windows-latest' }}
+        shell: bash
+        run: |
+          echo '--- root *.node ---'
+          ls -1 *.node || echo 'none'
+          echo '--- recursive *.node (depth<=5) ---'
+          find . -maxdepth 5 -type f -name '*.node' -print || echo 'none'
+          echo '--- target release candidates (*.dll / *.lib) ---'
+          find target -maxdepth 5 -type f \( -name '*.dll' -o -name '*.lib' \) -print 2>/dev/null || true
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
