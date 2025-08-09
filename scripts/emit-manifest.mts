@@ -18,14 +18,18 @@ import path from 'node:path'
 import crypto from 'node:crypto'
 import process from 'node:process'
 
-const ALLOWED_TYPES = new Set(['int','uint','char *','char*','string','double','json'])
+const ALLOWED_TYPES = new Set(['int', 'uint', 'char *', 'char*', 'string', 'double', 'json'])
 const DEFAULT_MANIFEST_PATH = process.env.DTRACE_MANIFEST || 'probes.manifest.json'
 const FORCE_RESCAN = process.env.DTRACE_FORCE_RESCAN === '1' || process.argv.includes('--rescan')
 
-interface ProbeAgg { name: string; arg_types: string[]; variants: Set<string> }
+interface ProbeAgg {
+  name: string
+  arg_types: string[]
+  variants: Set<string>
+}
 
 function scanAll(): ProbeAgg[] {
-  const roots = ['oldtests','tests']
+  const roots = ['oldtests', 'tests']
   const agg = new Map<string, ProbeAgg>()
   const parseTypes = (rawList: string): string[] => {
     const typeRe = /['"`]([^'"`]+)['"`]/g
@@ -62,10 +66,14 @@ function scanAll(): ProbeAgg[] {
       if (!/\.(js|ts)$/.test(f)) continue
       const p = path.join(root, f)
       let content: string
-      try { content = fs.readFileSync(p,'utf8') } catch { continue }
+      try {
+        content = fs.readFileSync(p, 'utf8')
+      } catch {
+        continue
+      }
       let m: RegExpExecArray | null
       while ((m = staticRe.exec(content))) {
-        add(m[2], parseTypes(m[3]||''))
+        add(m[2], parseTypes(m[3] || ''))
       }
     }
   }
@@ -73,17 +81,21 @@ function scanAll(): ProbeAgg[] {
   for (const p of agg.values()) {
     if (/^probe\d+$/.test(p.name) && p.arg_types.length === 0) p.arg_types.push('int')
   }
-  return Array.from(agg.values()).sort((a,b)=>a.name.localeCompare(b.name))
+  return Array.from(agg.values()).sort((a, b) => a.name.localeCompare(b.name))
 }
 
 function canonicalize(probes: ProbeAgg[]): string {
-  const obj = { schemaVersion: 1, provider: 'nodeapp', probes: probes.map(p=>({
-    name: p.name,
-    arg_types: p.arg_types,
-    variants: Array.from(p.variants.values())
-      .map(v => v === '' ? [] : v.split('|'))
-      .sort((a,b)=> (b.length - a.length) || a.join(',').localeCompare(b.join(',')))
-  })) }
+  const obj = {
+    schemaVersion: 1,
+    provider: 'nodeapp',
+    probes: probes.map((p) => ({
+      name: p.name,
+      arg_types: p.arg_types,
+      variants: Array.from(p.variants.values())
+        .map((v) => (v === '' ? [] : v.split('|')))
+        .sort((a, b) => b.length - a.length || a.join(',').localeCompare(b.join(','))),
+    })),
+  }
   return JSON.stringify(obj, null, 2) + '\n'
 }
 
@@ -91,7 +103,7 @@ function main() {
   let probes: ProbeAgg[] | undefined
   if (!FORCE_RESCAN && fs.existsSync(DEFAULT_MANIFEST_PATH)) {
     try {
-      const j = JSON.parse(fs.readFileSync(DEFAULT_MANIFEST_PATH,'utf8'))
+      const j = JSON.parse(fs.readFileSync(DEFAULT_MANIFEST_PATH, 'utf8'))
       if (j && Array.isArray(j.probes)) probes = j.probes
     } catch {}
   }

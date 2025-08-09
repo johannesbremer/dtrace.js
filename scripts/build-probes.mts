@@ -36,7 +36,7 @@ function sha256(data: string) {
 
 // --- Signature extraction ---
 const typeRe = /['"`]([^'"`]+)['"`]/g
-const ALLOWED = new Set(['int','uint','char *','char*','string','double','json'])
+const ALLOWED = new Set(['int', 'uint', 'char *', 'char*', 'string', 'double', 'json'])
 const ADD_PROBE_RE = /\.addProbe\s*\(\s*(['"`])([A-Za-z_][A-Za-z0-9_]*)\1\s*((?:,\s*['"`][^'"`]+['"`])*)\)/g
 
 function parseTypes(rawList: string): string[] {
@@ -54,7 +54,7 @@ function extractFileSignatures(content: string): Signature[] {
   const sigs: Signature[] = []
   let m: RegExpExecArray | null
   while ((m = ADD_PROBE_RE.exec(content))) {
-    sigs.push({ probe: m[2], args: parseTypes(m[3]||'') })
+    sigs.push({ probe: m[2], args: parseTypes(m[3] || '') })
   }
   return sigs
 }
@@ -71,7 +71,7 @@ function computeGlobal(): { list: string[]; hash: string } {
   }
   flat.sort()
   const uniq: string[] = []
-  for (const f of flat) if (uniq[uniq.length-1] !== f) uniq.push(f)
+  for (const f of flat) if (uniq[uniq.length - 1] !== f) uniq.push(f)
   const hash = sha256(JSON.stringify(uniq))
   return { list: uniq, hash }
 }
@@ -96,7 +96,10 @@ function logDiff(oldList: string[], newList: string[]) {
 let building = false
 let rebuildQueued = false
 function regenManifestAndBuild() {
-  if (building) { rebuildQueued = true; return }
+  if (building) {
+    rebuildQueued = true
+    return
+  }
   building = true
   run('node', [manifestScript, '--rescan'])
   if (!fs.existsSync(manifestPath)) {
@@ -109,15 +112,19 @@ function regenManifestAndBuild() {
     const manifestContent = fs.readFileSync(manifestPath, 'utf8')
     const manifestHash = sha256(manifestContent)
     fs.writeFileSync(`${manifestPath}.sha256`, manifestHash + '\n')
-    for (const f of fs.readdirSync('.')) if (f.endsWith('.node')) fs.writeFileSync(`${f}.probes.sha256`, manifestHash + '\n')
+    for (const f of fs.readdirSync('.'))
+      if (f.endsWith('.node')) fs.writeFileSync(`${f}.probes.sha256`, manifestHash + '\n')
     console.log(`[dtrace-provider] native rebuilt (manifest hash ${manifestHash})`)
     building = false
-    if (rebuildQueued) { rebuildQueued = false; regenManifestAndBuild() }
+    if (rebuildQueued) {
+      rebuildQueued = false
+      regenManifestAndBuild()
+    }
   })
 }
 
 function initialScan() {
-  const roots = ['oldtests','tests']
+  const roots = ['oldtests', 'tests']
   for (const root of roots) {
     if (!fs.existsSync(root)) continue
     const walk = (dir: string) => {
@@ -125,7 +132,9 @@ function initialScan() {
         const full = path.join(dir, entry.name)
         if (entry.isDirectory()) walk(full)
         else if (/\.(js|ts)$/.test(entry.name)) {
-          try { fileSigs.set(full, extractFileSignatures(fs.readFileSync(full,'utf8'))) } catch {}
+          try {
+            fileSigs.set(full, extractFileSignatures(fs.readFileSync(full, 'utf8')))
+          } catch {}
         }
       }
     }
@@ -134,7 +143,9 @@ function initialScan() {
   const { list, hash } = computeGlobal()
   let previous: string[] = []
   if (fs.existsSync(SNAPSHOT_PATH)) {
-    try { previous = JSON.parse(fs.readFileSync(SNAPSHOT_PATH,'utf8')) } catch {}
+    try {
+      previous = JSON.parse(fs.readFileSync(SNAPSHOT_PATH, 'utf8'))
+    } catch {}
   }
   globalHash = hash
   console.log(`[dtrace-provider] initial signatures (${list.length}):`)
@@ -150,21 +161,27 @@ function initialScan() {
 function updateFile(file: string) {
   if (!fs.existsSync(file)) fileSigs.delete(file)
   else {
-    try { fileSigs.set(file, extractFileSignatures(fs.readFileSync(file,'utf8'))) } catch { return }
+    try {
+      fileSigs.set(file, extractFileSignatures(fs.readFileSync(file, 'utf8')))
+    } catch {
+      return
+    }
   }
 }
 
 function recomputeAndMaybeBuild(oldList: string[], reasonFile?: string) {
   const { list, hash } = computeGlobal()
   if (hash === globalHash && !FORCE) {
-    console.log(`[dtrace-provider] no semantic probe change (skip rebuild)${reasonFile ? ' ['+reasonFile+']' : ''}`)
+    console.log(`[dtrace-provider] no semantic probe change (skip rebuild)${reasonFile ? ' [' + reasonFile + ']' : ''}`)
     return
   }
   logDiff(oldList, list)
   globalHash = hash
   regenManifestAndBuild()
   // Persist snapshot for cross-restart diffing
-  try { fs.writeFileSync(SNAPSHOT_PATH, JSON.stringify(list, null, 2) + '\n') } catch {}
+  try {
+    fs.writeFileSync(SNAPSHOT_PATH, JSON.stringify(list, null, 2) + '\n')
+  } catch {}
 }
 
 if (!WATCH) {
@@ -174,12 +191,16 @@ if (!WATCH) {
   const { default: chokidar } = await import('chokidar')
   console.log('[dtrace-provider] watch mode (signature diff) enabled')
   // Start watcher BEFORE initial build so edits during build are not missed.
-  const watchGlobs = ['oldtests/*.js','oldtests/**/*.js','tests/*.js','tests/**/*.js','tests/**/*.ts']
+  const watchGlobs = ['oldtests/*.js', 'oldtests/**/*.js', 'tests/*.js', 'tests/**/*.js', 'tests/**/*.ts']
   if (DEBUG) console.log('[dtrace-provider][debug] watch globs:', watchGlobs)
-  const watcher = chokidar.watch(watchGlobs, { ignoreInitial: false, awaitWriteFinish: { stabilityThreshold: 75, pollInterval: 25 } })
-  if (DEBUG) watcher.on('raw', (event, pathRaw, details) => {
-    console.log('[dtrace-provider][raw]', event, pathRaw, details ? JSON.stringify(details) : '')
+  const watcher = chokidar.watch(watchGlobs, {
+    ignoreInitial: false,
+    awaitWriteFinish: { stabilityThreshold: 75, pollInterval: 25 },
   })
+  if (DEBUG)
+    watcher.on('raw', (event, pathRaw, details) => {
+      console.log('[dtrace-provider][raw]', event, pathRaw, details ? JSON.stringify(details) : '')
+    })
   let didInitial = false
   watcher.on('ready', () => {
     if (didInitial) return
@@ -195,12 +216,18 @@ if (!WATCH) {
     else updateFile(file)
     const after = fileSigs.get(file) || []
     if (DEBUG) {
-      console.log('[dtrace-provider][debug] file before sigs:', before.map(s=>s.probe+'|'+s.args.join(',')).join(',') || '(none)')
-      console.log('[dtrace-provider][debug] file after sigs :', after.map(s=>s.probe+'|'+s.args.join(',')).join(',') || '(none)')
+      console.log(
+        '[dtrace-provider][debug] file before sigs:',
+        before.map((s) => s.probe + '|' + s.args.join(',')).join(',') || '(none)',
+      )
+      console.log(
+        '[dtrace-provider][debug] file after sigs :',
+        after.map((s) => s.probe + '|' + s.args.join(',')).join(',') || '(none)',
+      )
     }
     if (kind !== 'unlink') {
-      const beforeStr = before.map(s=>`${s.probe}|${s.args.join(',')}`).sort()
-      const afterStr = after.map(s=>`${s.probe}|${s.args.join(',')}`).sort()
+      const beforeStr = before.map((s) => `${s.probe}|${s.args.join(',')}`).sort()
+      const afterStr = after.map((s) => `${s.probe}|${s.args.join(',')}`).sort()
       if (JSON.stringify(beforeStr) !== JSON.stringify(afterStr)) {
         console.log(`[dtrace-provider] file signature change (${file}):`)
         logDiff(beforeStr, afterStr)
@@ -212,9 +239,9 @@ if (!WATCH) {
     }
     recomputeAndMaybeBuild(oldList, file)
   }
-  watcher.on('add', (p)=> onChange(p,'add'))
-  watcher.on('change', (p)=> onChange(p,'change'))
-  watcher.on('unlink', (p)=> onChange(p,'unlink'))
+  watcher.on('add', (p) => onChange(p, 'add'))
+  watcher.on('change', (p) => onChange(p, 'change'))
+  watcher.on('unlink', (p) => onChange(p, 'unlink'))
 
   // Synthesize events for atomic editor save sequences that only emit raw rename.
   const pendingRaw = new Map<string, NodeJS.Timeout>()
@@ -226,7 +253,7 @@ if (!WATCH) {
     if (rawPath.includes(path.sep)) {
       candidates.push(rawPath)
     } else {
-      for (const base of ['oldtests','tests']) {
+      for (const base of ['oldtests', 'tests']) {
         const p = path.join(base, rawPath)
         candidates.push(p)
       }
@@ -242,15 +269,21 @@ if (!WATCH) {
             schedule() // retry to allow atomic save to settle
             return
           }
-            pendingRaw.delete(candidate)
-            const kind = exists ? (fileSigs.has(candidate) ? 'change' : 'add') : 'unlink'
-            if (DEBUG) console.log(`[dtrace-provider][debug] synthesized ${kind} after raw rename for ${candidate} (tries=${attemptState.tries})`)
-            onChange(candidate, kind)
+          pendingRaw.delete(candidate)
+          const kind = exists ? (fileSigs.has(candidate) ? 'change' : 'add') : 'unlink'
+          if (DEBUG)
+            console.log(
+              `[dtrace-provider][debug] synthesized ${kind} after raw rename for ${candidate} (tries=${attemptState.tries})`,
+            )
+          onChange(candidate, kind)
         }, 140)
         pendingRaw.set(candidate, to)
       }
       schedule()
     }
   })
-  process.on('SIGINT', () => { console.log('\n[dtrace-provider] watch stopping'); watcher.close().then(()=>process.exit(0)) })
+  process.on('SIGINT', () => {
+    console.log('\n[dtrace-provider] watch stopping')
+    watcher.close().then(() => process.exit(0))
+  })
 }
