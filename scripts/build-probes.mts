@@ -14,6 +14,7 @@ import { spawnSync, spawn } from 'node:child_process'
 import fs from 'node:fs'
 import crypto from 'node:crypto'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 const args = process.argv.slice(2)
 const WATCH = args.includes('--watch')
@@ -21,7 +22,11 @@ const FORCE = args.includes('--force')
 const GENERATE_ONLY = args.includes('--generate')
 const DEBUG = process.env.DTRACE_DEBUG_WATCH === '1'
 
-const manifestScript = new URL('./emit-manifest.mts', import.meta.url).pathname
+// Resolve the emit-manifest script path in a cross-platform safe way.
+// On Windows, URL.pathname can yield a leading slash (e.g. /D:/path) which, when
+// passed directly to Node, may produce a doubled drive prefix (D:\D:\...).
+// fileURLToPath normalizes this.
+const manifestScript = fileURLToPath(new URL('./emit-manifest.mts', import.meta.url))
 const manifestPath = process.env.DTRACE_MANIFEST || 'probes.manifest.json'
 
 type Signature = { probe: string; args: string[] }
@@ -108,7 +113,7 @@ function regenManifestAndBuild() {
     return
   }
   building = true
-  run('node', [manifestScript, '--rescan'])
+  run(process.execPath, ['--import', 'ts-node/register', manifestScript, '--rescan'])
   if (!fs.existsSync(manifestPath)) {
     console.error('[dtrace-provider] manifest generation failed')
     process.exit(1)
@@ -198,10 +203,10 @@ if (!WATCH) {
     // Generate / refresh manifest only (no native build). Used by CI 'build' script
     // to ensure probes.manifest.json exists before cargo build without causing
     // recursive "pnpm build" invocation.
-    run('node', [manifestScript, '--rescan'])
+    run(process.execPath, ['--import', 'ts-node/register', manifestScript, '--rescan'])
     process.exit(0)
   } else {
-    run('node', [manifestScript, '--rescan'])
+    run(process.execPath, ['--import', 'ts-node/register', manifestScript, '--rescan'])
     regenManifestAndBuild()
   }
 } else {

@@ -51,6 +51,9 @@ jobs:
       - name: Cargo fmt
         run: cargo fmt -- --check
 
+      - name: Gen
+        run: pnpm run build-probes:gen
+
       - name: Clippy
         run: cargo clippy
   build:

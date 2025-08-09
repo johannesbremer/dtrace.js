@@ -15,12 +15,16 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import crypto from 'node:crypto'
 import process from 'node:process'
 
 const ALLOWED_TYPES = new Set(['int', 'uint', 'char *', 'char*', 'string', 'double', 'json'])
 const DEFAULT_MANIFEST_PATH = process.env.DTRACE_MANIFEST || 'probes.manifest.json'
 const FORCE_RESCAN = process.env.DTRACE_FORCE_RESCAN === '1' || process.argv.includes('--rescan')
+// Normalize __dirname equivalent for robustness on Windows
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 interface ProbeAgg {
   name: string
